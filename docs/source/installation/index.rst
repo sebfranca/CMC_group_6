@@ -1,15 +1,12 @@
 .. _installation-index:
 
-Setup
-======
+Installation
+============
 
 .. toctree::
     :maxdepth: 2
 
-    git_instructions
-    python/index
-    vscode
-..
-     spyder
-     virtualenv
+    installation_git
+    installation_python
+    installation_vscode
     

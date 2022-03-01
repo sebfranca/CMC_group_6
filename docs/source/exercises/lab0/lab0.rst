@@ -17,8 +17,7 @@ Basic Python Concepts
 ---------------------
 
 In this section we will quickly go over the list of topics given below.
-You can open and run the individual files marked with the same topic
-name using Spyder. We suggest you to go through each section
+We suggest you to go through each section
 individually and spend time exploring each of the concepts by making
 changes to the code and observing the outputs.
 
@@ -49,9 +48,9 @@ changes to the code and observing the outputs.
 10. Classes
 
 While you are executing each of the small exercises, try to learn how to
-use different features of Spyder. Especially the help and debugging
+use different features of your IDE. Especially the help and debugging
 feature. When you are unsure of any command, use the help service either
-the one built into Python or Spyder. After familiarizing yourself with
+the one built into Python or embedded in your IDE. After familiarizing yourself with
 the above concepts try to solve the following python exercises.
 
 Exercise 1

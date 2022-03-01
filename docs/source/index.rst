@@ -9,4 +9,6 @@ Welcome to Computational Motor Control course documentation!
    :maxdepth: 3
 
    installation/index
+   setup/index
+   resources/index
    exercises/index
