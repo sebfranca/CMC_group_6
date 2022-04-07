@@ -1,0 +1,5 @@
+mujoco
+dm_control
+git+https://gitlab.com/FARMSIM/farms_core.git@cmc_2022
+git+https://gitlab.com/FARMSIM/farms_mujoco.git@cmc_2022
+git+https://gitlab.com/FARMSIM/farms_sim.git@cmc_2022
