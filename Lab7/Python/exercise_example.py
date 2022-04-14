@@ -4,15 +4,22 @@ import os
 import pickle
 from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
-
+import numpy as np
 
 def exercise_example(timestep):
     """Exercise example"""
 
+    coupling = np.zeros([20,20])
+    for i in range(20):
+        for j in range(20):
+            if i==j:
+                coupling[i,j] = 1
+            else:
+                coupling[i,j] = 10
     # Parameters
     parameter_set = [
         SimulationParameters(
-            duration=10,  # Simulation duration in [s]
+            duration=100,  # Simulation duration in [s]
             timestep=timestep,  # Simulation timestep in [s]
             spawn_position=[0, 0, 0.1],  # Robot position in [m]
             spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
@@ -20,6 +27,11 @@ def exercise_example(timestep):
             amplitudes=[1, 2, 3],  # Just an example
             phase_lag=0,  # or np.zeros(n_joints) for example
             turn=0,  # Another example
+            freqs = np.arange(20)/10,
+            coupling_weights = coupling,
+            nominal_amplitudes = [1]*20,
+            rates = [0.1]*20,
+            phase_bias = coupling,
             # ...
         )
     ]

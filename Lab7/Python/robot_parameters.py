@@ -20,6 +20,7 @@ class RobotParameters(dict):
         self.n_oscillators_body = 2*self.n_body_joints
         self.n_oscillators_legs = self.n_legs_joints
         self.n_oscillators = self.n_oscillators_body + self.n_oscillators_legs
+        
         self.freqs = np.zeros(self.n_oscillators)
         self.coupling_weights = np.zeros([
             self.n_oscillators,
@@ -40,21 +41,25 @@ class RobotParameters(dict):
 
     def set_frequencies(self, parameters):
         """Set frequencies"""
-        pylog.warning('Coupling weights must be set')
+        if hasattr(parameters, 'freqs'):
+            self.freqs = parameters.freqs
 
     def set_coupling_weights(self, parameters):
         """Set coupling weights"""
-        pylog.warning('Coupling weights must be set')
+        if hasattr(parameters, 'coupling_weights'):
+            self.coupling_weights = parameters.coupling_weights
 
     def set_phase_bias(self, parameters):
         """Set phase bias"""
-        pylog.warning('Phase bias must be set')
+        if hasattr(parameters,'phase_bias'):
+            self.phase_bias = parameters.phase_bias
 
     def set_amplitudes_rate(self, parameters):
         """Set amplitude rates"""
-        pylog.warning('Convergence rates must be set')
+        if hasattr(parameters,'rates'):
+            self.rates = parameters.rates
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
-        pylog.warning('Nominal amplitudes must be set')
-
+        if hasattr(parameters,'nominal_amplitudes'):
+            self.nominal_amplitudes = parameters.nominal_amplitudes

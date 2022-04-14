@@ -26,12 +26,30 @@ def run_network(duration, update=False, drive=0):
     timestep = 1e-2
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
+    
+    coupling = np.zeros([20,20])
+    for i in range(20):
+        for j in range(20):
+            if i==j:
+                coupling[i,j] = 1
+            else:
+                coupling[i,j] = 10
+    
+    #Here, we must set: f_i, w_ij, phi_ij, a_i, R_i
     sim_parameters = SimulationParameters(
         drive=drive,
         amplitude_gradient=None,
         phase_lag=None,
         turn=None,
+        freqs = np.arange(20)/10,
+        coupling_weights = coupling,
+        phase_bias = coupling,
+        rates = [0.1]*20,
+        nominal_amplitudes = [1]*20,
     )
+    
+    
+    
     state = SalamandraState.salamandra_robotica_2(n_iterations)
     network = SalamandraNetwork(sim_parameters, n_iterations, state)
     osc_left = np.arange(8)
@@ -88,7 +106,10 @@ def run_network(duration, update=False, drive=0):
     ))
 
     # Implement plots of network results
-    pylog.warning('Implement plots')
+    plt.figure()
+    plt.plot(times,phases_log)
+    plt.figure()
+    plt.plot(times,amplitudes_log)
 
 
 def main(plot):
