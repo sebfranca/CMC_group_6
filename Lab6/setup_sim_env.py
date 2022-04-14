@@ -70,15 +70,18 @@ def main():
         check_call(pip_install + ['dm_control'])
 
     # FARMS
-    for package, commit in [
-            ['farms_core', 'cmc_2022'],
-            ['farms_mujoco', 'cmc_2022'],
-            ['farms_sim', 'cmc_2022'],
-    ]:
+    for package in ['farms_core', 'farms_mujoco', 'farms_sim']:
+        print(f'Providing option to reinstall {package} if already installed')
+        check_call(['pip', 'uninstall', package])
         print(f'Installing {package}')
         check_call(
             pip_install
-            + [f'git+https://gitlab.com/FARMSIM/{package}.git@{commit}']
+            + [
+                '--no-cache-dir',
+                f'https://gitlab.com/farmsim/{package}/'
+                f'-/archive/cmc_2022/{package}-cmc_2022.zip',
+                '-vvv',
+            ]
         )
         print(f'Completed installation of {package}\n')
 
