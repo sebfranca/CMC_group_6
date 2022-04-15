@@ -27,13 +27,35 @@ def run_network(duration, update=False, drive=0):
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
     
+    phase_bias = np.zeros([20,20])
+    for i in range(16):
+        for j in range(16):
+            if j == i+8 or j==i-8:
+                phase_bias[i,j] = np.pi #i and j on same row
+            
+            elif i<8 and j<8: #i and j on the left
+                if j==i+1: #j comes just after i
+                    phase_bias[i,j] = -2*np.pi/16
+                elif j==i-1: #j comes just before i
+                    phase_bias[i,j] = 2*np.pi/16
+                    
+            elif (i>=8 and i<16) and (j>=8 and j<16): #i and j on the right
+                if j==i-1:
+                    phase_bias[i,j] = 2*np.pi/16
+                elif j==i+1:
+                    phase_bias[i,j] = -2*np.pi/16
+    
+    
     coupling = np.zeros([20,20])
-    for i in range(20):
-        for j in range(20):
+    for i in range(16):
+        for j in range(16):
             if i==j:
                 coupling[i,j] = 1
-            else:
+            elif (j==i+8 or j==i-8) and j<16: #i and j left&right
                 coupling[i,j] = 10
+            elif (j==i+1 and j!=8) or (j==i-1 and j!=7) and j<16: #i and j are near each other
+                coupling[i,j] = 10
+            
     
     #Here, we must set: f_i, w_ij, phi_ij, a_i, R_i
     sim_parameters = SimulationParameters(
@@ -41,11 +63,11 @@ def run_network(duration, update=False, drive=0):
         amplitude_gradient=None,
         phase_lag=None,
         turn=None,
-        freqs = np.arange(20)/10,
+        freqs = np.ones(20),
         coupling_weights = coupling,
-        phase_bias = coupling,
-        rates = [0.1]*20,
-        nominal_amplitudes = [1]*20,
+        phase_bias = phase_bias,
+        rates = [0.25]*20,
+        nominal_amplitudes = [0.75]*20,
     )
     
     
@@ -107,7 +129,10 @@ def run_network(duration, update=False, drive=0):
 
     # Implement plots of network results
     plt.figure()
-    plt.plot(times,phases_log)
+    plt.plot(times,np.cos(phases_log[:,0:3]) )
+    plt.figure()
+    plt.plot(times,np.cos(phases_log[:,0:2]) )
+    plt.plot(times,np.cos(phases_log[:,8:10]))
     plt.figure()
     plt.plot(times,amplitudes_log)
 

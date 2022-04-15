@@ -60,8 +60,10 @@ def motor_output(phases, amplitudes, iteration):
 
     """
     # Implement equation here
-    #q = np.zeros_like(phases)[:12] + np.zeros_like(amplitudes)[:12]
-    q = amplitudes*(1+np.cos(phases))
+    q = np.zeros_like(phases)[:12] + np.zeros_like(amplitudes)[:12]
+    for i,r in enumerate(amplitudes):
+        if i<8:
+            q[i] = r*(1+np.cos(phases[i])) - amplitudes[i+8]*(1+np.cos(phases[i+8]))
     
     return q
 

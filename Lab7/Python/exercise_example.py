@@ -9,13 +9,35 @@ import numpy as np
 def exercise_example(timestep):
     """Exercise example"""
 
+    phase_bias = np.zeros([20,20])
+    for i in range(16):
+        for j in range(16):
+            if j == i+8 or j==i-8:
+                phase_bias[i,j] = np.pi #i and j on same row
+            
+            elif i<8 and j<8: #i and j on the left
+                if j==i+1: #j comes just after i
+                    phase_bias[i,j] = -2*np.pi/16
+                elif j==i-1: #j comes just before i
+                    phase_bias[i,j] = 2*np.pi/16
+                    
+            elif (i>=8 and i<16) and (j>=8 and j<16): #i and j on the right
+                if j==i-1:
+                    phase_bias[i,j] = 2*np.pi/16
+                elif j==i+1:
+                    phase_bias[i,j] = -2*np.pi/16
+    
+    
     coupling = np.zeros([20,20])
-    for i in range(20):
-        for j in range(20):
+    for i in range(16):
+        for j in range(16):
             if i==j:
                 coupling[i,j] = 1
-            else:
+            elif (j==i+8 or j==i-8) and j<16: #i and j left&right
                 coupling[i,j] = 10
+            elif (j==i+1 and j!=8) or (j==i-1 and j!=7) and j<16: #i and j are near each other
+                coupling[i,j] = 10
+                
     # Parameters
     parameter_set = [
         SimulationParameters(
@@ -27,11 +49,11 @@ def exercise_example(timestep):
             amplitudes=[1, 2, 3],  # Just an example
             phase_lag=0,  # or np.zeros(n_joints) for example
             turn=0,  # Another example
-            freqs = np.arange(20)/10,
+            freqs = np.ones(20),
             coupling_weights = coupling,
-            nominal_amplitudes = [1]*20,
-            rates = [0.1]*20,
-            phase_bias = coupling,
+            nominal_amplitudes = [0.75]*20,
+            rates = [0.25]*20,
+            phase_bias = phase_bias,
             # ...
         )
     ]
