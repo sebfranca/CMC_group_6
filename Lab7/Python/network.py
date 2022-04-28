@@ -64,7 +64,8 @@ def motor_output(phases, amplitudes, iteration):
     for i,r in enumerate(amplitudes):
         if i<8:
             q[i] = r*(1+np.cos(phases[i])) - amplitudes[i+8]*(1+np.cos(phases[i+8]))
-    
+        elif i<12:
+            q[i] = phases[i]
     return q
 
 
@@ -93,6 +94,8 @@ class SalamandraNetwork:
         """Step"""
         if iteration + 1 >= self.n_iterations:
             return
+        self.robot_parameters.iteration = iteration
+        self.robot_parameters.update(self.robot_parameters)
         self.solver.set_f_params(self.robot_parameters)
         self.state.array[iteration+1, :] = self.solver.integrate(time+timestep)
 

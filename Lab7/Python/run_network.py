@@ -11,7 +11,7 @@ from simulation_parameters import SimulationParameters
 from network import SalamandraNetwork
 
 
-def run_network(duration, update=False, drive=0):
+def run_network(duration, update=False, drive=1, timestep=1e-2):
     """Run network without MuJoCo and plot results
     Parameters
     ----------
@@ -23,9 +23,15 @@ def run_network(duration, update=False, drive=0):
         Central drive to the oscillators
     """
     # Simulation setup
-    timestep = 1e-2
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
+    
+    if type(drive)==int or type(drive)==float:
+        drive = drive * np.ones_like(times)
+    elif len(drive)!=len(times):
+        print("Wrong length of drive array")
+    
+    
     
     body_segments = 8
     limbs = 2
@@ -84,34 +90,6 @@ def run_network(duration, update=False, drive=0):
                     phase_bias[i+2*body_segments, j+2*body_segments] = np.pi
                     
     
-    # phase_bias = np.zeros([20,20])
-    # for i in range(16):
-    #     for j in range(16):
-    #         if j == i+8 or j==i-8:
-    #             phase_bias[i,j] = np.pi #i and j on same row
-            
-    #         elif i<8 and j<8: #i and j on the left
-    #             if j==i+1: #j comes just after i
-    #                 phase_bias[i,j] = -2*np.pi/body_segments
-    #             elif j==i-1: #j comes just before i
-    #                 phase_bias[i,j] = 2*np.pi/body_segments
-                    
-    #         elif (i>=8 and i<16) and (j>=8 and j<16): #i and j on the right
-    #             if j==i-1:
-    #                 phase_bias[i,j] = 2*np.pi/body_segments
-    #             elif j==i+1:
-    #                 phase_bias[i,j] = -2*np.pi/body_segments
-       
-    # coupling = np.zeros([20,20])
-    # for i in range(16):
-    #     for j in range(16):
-    #         if i==j:
-    #             coupling[i,j] = 1
-    #         elif (j==i+8 or j==i-8) and j<16: #i and j left&right
-    #             coupling[i,j] = 10
-    #         elif (j==i+1 and j!=8) or (j==i-1 and j!=7) and j<16: #i and j are near each other
-    #             coupling[i,j] = 10
-   
     
     #Here, we must set: f_i, w_ij, phi_ij, a_i, R_i
     sim_parameters = SimulationParameters(
@@ -119,10 +97,10 @@ def run_network(duration, update=False, drive=0):
         amplitude_gradient=None,
         phase_lag=None,
         turn=None,
-        freqs = np.ones(20),
+        freqs = 0.4*np.ones(20),
         coupling_weights = coupling,
         phase_bias = phase_bias,
-        rates = [0.25]*20,
+        rates = [20]*20,
         nominal_amplitudes = [0.75]*20,
     )
     

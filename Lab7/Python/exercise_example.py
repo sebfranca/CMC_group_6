@@ -103,14 +103,12 @@ def exercise_example(timestep):
             timestep=timestep,  # Simulation timestep in [s]
             spawn_position=[0, 0, 0.1],  # Robot position in [m]
             spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
-            drive=4,  # An example of parameter part of the grid search
+            drive=4*np.ones_like(np.arange(0, 100, timestep)),  # An example of parameter part of the grid search
             amplitudes=[1, 2, 3],  # Just an example
             phase_lag=0,  # or np.zeros(n_joints) for example
             turn=0,  # Another example
-            freqs = np.ones(20),
             coupling_weights = coupling,
-            nominal_amplitudes = [0.75]*20,
-            rates = [0.25]*20,
+            rates = [20]*20,
             phase_bias = phase_bias,
             # ...
         )
@@ -122,7 +120,7 @@ def exercise_example(timestep):
         filename = './logs/example/simulation_{}.{}'
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
-            arena='water',  # Can also be 'ground', give it a try!
+            arena='ground',  # Can also be 'ground', give it a try!
             # fast=True,  # For fast mode (not real-time)
             # headless=True,  # For headless mode (No GUI, could be faster)
         )
