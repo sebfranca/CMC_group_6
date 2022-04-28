@@ -1,5 +1,5 @@
 numpy
-nptyping
+nptyping==1.4.4
 scipy
 matplotlib
 tqdm
