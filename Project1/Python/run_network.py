@@ -11,7 +11,7 @@ from simulation_parameters import SimulationParameters
 from network import SalamandraNetwork
 
 
-def run_network(duration, update=False, drive=1, timestep=1e-2):
+def run_network(duration, update=False, drive=0):
     """Run network without MuJoCo and plot results
     Parameters
     ----------
@@ -23,89 +23,15 @@ def run_network(duration, update=False, drive=1, timestep=1e-2):
         Central drive to the oscillators
     """
     # Simulation setup
+    timestep = 1e-2
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
-    
-    if type(drive)==int or type(drive)==float:
-        drive = drive * np.ones_like(times)
-    elif len(drive)!=len(times):
-        print("Wrong length of drive array")
-    
-    
-    
-    body_segments = 8
-    limbs = 2
-    coupling = np.zeros([20,20])
-    front_limbs_idxs = 16+np.linspace(0,1,2)
-    
-    ## Coupling
-    # Coupling weights of body oscillators 
-    for i in range(2*body_segments):
-        for j in range(2*body_segments):
-            if i!=j:
-                #No intraoscillator couplings
-                if ((j==i+1 and j!=body_segments) or (j==i-1 and j!=body_segments-1)):
-                    coupling[i,j] = 10 
-                elif j-body_segments==i or j+body_segments==i:
-                    coupling[i,j] = 10 
-                    
-    # Coupling weights of limb oscillators
-    for i in range(2*limbs):
-        for j in range(2*limbs):
-            if i!=j:
-                if (j==i-1 or j==i+1) and not(i==1 and j==2) and not(i==2 and j==1) or i%limbs==j%limbs:
-                    coupling[i+2*body_segments, j+2*body_segments] = 10 
-                    
-    # Coupling between body and limbs
-    for i in front_limbs_idxs:
-        for j in range(round(body_segments/2)):
-            if i%2 == 0:
-                if j<body_segments/2:
-                    coupling[int(i), j] = 30
-                    coupling[int(i)+2, j+round(body_segments/2)] = 30
-            else:
-                coupling[int(i), j+body_segments] = 30
-                coupling[int(i)+2, j+round(1.5*body_segments)] = 30
-    
-    ## Phase bias
-    #Phase biases of body
-    phase_bias = np.zeros([20,20])
-    for i in range(2*body_segments):
-        for j in range(2*body_segments):
-            if i!=j:
-               if ((j==i+1 and j!=body_segments) or (j==i-1 and j!=body_segments-1)):
-                    if j==i+1:
-                        phase_bias[i,j] = -2*np.pi/body_segments 
-                    elif j==i-1: 
-                        phase_bias[i,j] = 2*np.pi/body_segments 
-                        
-               elif j-body_segments==i or j+body_segments==i:
-                    phase_bias[i,j] = np.pi #i and j on same row
-    
-    # Phase biases of limbs
-    for i in range(2*limbs):
-        for j in range(2*limbs):
-            if i!=j:
-                if (j==i-1 or j==i+1) and not(i==1 and j==2) and not(i==2 and j==1) or i%limbs==j%limbs:
-                    phase_bias[i+2*body_segments, j+2*body_segments] = np.pi
-                    
-    
-    
-    #Here, we must set: f_i, w_ij, phi_ij, a_i, R_i
     sim_parameters = SimulationParameters(
         drive=drive,
         amplitude_gradient=None,
-        phase_lag=None,
+        phase_lag_body=None,
         turn=None,
-        freqs = 0.4*np.ones(20),
-        coupling_weights = coupling,
-        phase_bias = phase_bias,
-        rates = [20]*20,
-        nominal_amplitudes = [0.75]*20,
     )
-    
-    
-    
     state = SalamandraState.salamandra_robotica_2(n_iterations)
     network = SalamandraNetwork(sim_parameters, n_iterations, state)
     osc_left = np.arange(8)
@@ -141,7 +67,7 @@ def run_network(duration, update=False, drive=1, timestep=1e-2):
             network.robot_parameters.update(
                 SimulationParameters(
                     # amplitude_gradient=None,
-                    # phase_lag=None
+                    # phase_lag_body=None
                 )
             )
         network.step(i, time0, timestep)
@@ -162,13 +88,7 @@ def run_network(duration, update=False, drive=1, timestep=1e-2):
     ))
 
     # Implement plots of network results
-    plt.figure()
-    plt.plot(times,np.cos(phases_log[:,0:3]) )
-    plt.figure()
-    plt.plot(times,np.cos(phases_log[:,0:2]) )
-    plt.plot(times,np.cos(phases_log[:,8:10]))
-    plt.figure()
-    plt.plot(times,amplitudes_log)
+    pylog.warning('Implement plots')
 
 
 def main(plot):
