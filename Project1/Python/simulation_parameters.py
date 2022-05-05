@@ -13,6 +13,8 @@ class SimulationParameters:
         self.initial_phases = None
         self.phase_lag_body = None
         self.amplitude_gradient = None
+        
+        self.drive_mlr = kwargs.get("drive_mlr",2)
         # Feel free to add more parameters (ex: MLR drive)
         # self.drive_mlr = ...
         # ...

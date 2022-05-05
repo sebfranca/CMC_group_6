@@ -27,7 +27,7 @@ def run_network(duration, update=False, drive=0):
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
     sim_parameters = SimulationParameters(
-        drive=drive,
+        drive_mlr=5,
         amplitude_gradient=None,
         phase_lag_body=None,
         turn=None,

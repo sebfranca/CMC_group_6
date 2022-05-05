@@ -16,20 +16,31 @@ def network_ode(_time, state, robot_parameters, loads):
         ODE states at time _time
     robot_parameters: <RobotParameters>
         Instance of RobotParameters
-    loads: <np.array>
-        The lateral forces applied to the body links
 
     Returns
     -------
-    dstate: <np.array>
+    :<np.array>
         Returns derivative of state (phases and amplitudes)
 
     """
     n_oscillators = robot_parameters.n_oscillators
     phases = state[:n_oscillators]
     amplitudes = state[n_oscillators:2*n_oscillators]
+    omega = robot_parameters.coupling_weights
+    phi = robot_parameters.phase_bias
+    a = robot_parameters.rates
+    R = robot_parameters.nominal_amplitudes
     # Implement equation here
-    return np.concatenate([np.zeros_like(phases), np.zeros_like(amplitudes)])
+    thetadot = 2*np.pi*robot_parameters.freqs
+    rdot = np.zeros_like(amplitudes)
+    
+    for i,thetai in enumerate(phases):
+        rdot[i] = a[i] * (R[i] - amplitudes[i])
+        for j,thetaj in enumerate(phases):
+            thetadot[i] = thetadot[i] + amplitudes[j]*omega[i,j]*np.sin(thetaj - thetai - phi[i,j])
+            
+        
+    return np.concatenate([thetadot, rdot])
 
 
 def motor_output(phases, amplitudes, iteration):
@@ -44,12 +55,19 @@ def motor_output(phases, amplitudes, iteration):
 
     Returns
     -------
-    motor_outputs: <np.array>
+    : <np.array>
         Motor outputs for joint in the system.
 
     """
     # Implement equation here
-    return np.zeros_like(phases)[:12] + np.zeros_like(amplitudes)[:12]
+    q = np.zeros_like(phases)[:12] + np.zeros_like(amplitudes)[:12]
+    for i,r in enumerate(amplitudes):
+        if i<8:
+            q[i] = r*(1+np.cos(phases[i])) - amplitudes[i+8]*(1+np.cos(phases[i+8]))
+        elif i<12:
+            q[i] = phases[i]+np.pi/2
+    return q
+
 
 
 class SalamandraNetwork:
