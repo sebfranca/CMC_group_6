@@ -9,7 +9,7 @@ from simulation_parameters import SimulationParameters
 
 def exercise_example(timestep):
     """Exercise example"""
-
+    drive=3.5
     # Parameters
     parameter_set = [
         SimulationParameters(
@@ -17,13 +17,13 @@ def exercise_example(timestep):
             timestep=timestep,  # Simulation timestep in [s]
             spawn_position=[0, 0, 0.1],  # Robot position in [m]
             spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
-            drive=drive,  # An example of parameter part of the grid search
+            drive_mlr=drive,  # An example of parameter part of the grid search
             amplitudes=[1, 2, 3],  # Just an example
             phase_lag_body=0,  # or np.zeros(n_joints) for example
             turn=0,  # Another example
             # ...
         )
-        for drive in np.linspace(3, 4, 2)
+        #for drive in np.linspace(3, 4, 2)
         # for amplitudes in ...
         # for ...
     ]

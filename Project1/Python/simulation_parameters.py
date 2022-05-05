@@ -1,5 +1,7 @@
 """Simulation parameters"""
 
+import numpy as np
+
 
 class SimulationParameters:
     """Simulation parameters"""

@@ -27,7 +27,7 @@ class RobotParameters(dict):
             self.n_oscillators,
         ])
         self.phase_bias = np.zeros([self.n_oscillators, self.n_oscillators])
-        self.rates = np.zeros(self.n_oscillators)
+        self.rates = 20*np.ones(self.n_oscillators)
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
 
@@ -62,6 +62,7 @@ class RobotParameters(dict):
                 freqs[i] = f_drive_limb(d)
         
         self.freqs = freqs
+        #print(freqs[16:])
 
     def set_coupling_weights(self, parameters):
         """Set coupling weights"""
@@ -71,25 +72,24 @@ class RobotParameters(dict):
             'l2l_same' : [10],
             'l2l_opp' : [10],
             'l2b' : [30]
-            }
-        
+            }        
         self.coupling_weights = self.make_matrix(coupling_params)
         
     def set_phase_bias(self, parameters):
         """Set phase bias"""
         phase_lag_params = {
-            'b2b_same' : [2*np.pi/8],
+            'b2b_same' : [-2*np.pi/8],
             'b2b_opp' : [np.pi],
             'l2l_same' : [np.pi],
             'l2l_opp' : [np.pi],
             'l2b' : [0]
             }
         
-        self.phase_bias = self.make_matrix(phase_lag_params)
+        self.phase_bias = self.make_matrix(phase_lag_params, couplingM=False)
 
     def set_amplitudes_rate(self, parameters):
         """Set amplitude rates"""
-        self.rates = parameters.rates
+        self.rates = 20*np.ones(self.n_oscillators)
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
@@ -111,13 +111,14 @@ class RobotParameters(dict):
                 nominal_amplitudes[i] = r_drive_limb(d)
         
         self.nominal_amplitudes = nominal_amplitudes
+        #print(nominal_amplitudes[16:])
 
     def set_feedback_gains(self, parameters):
         """Set feeback gains"""
         pylog.warning('Convergence rates must be set')
 
 
-    def make_matrix(params,i=0):
+    def make_matrix(self, params, i=0, couplingM=True):
         """
         Creates the coupling or phase bias matrix.
         
@@ -131,15 +132,12 @@ class RobotParameters(dict):
             _same : on the same side (left or right)
             _opp : opposite sides (left or right)
         """
+
         b2b_same = params['b2b_same'][i]
         b2b_opp = params['b2b_opp'][i]
         l2l_same = params['l2l_same'][i]
         l2l_opp = params['l2l_opp'][i]
         l2b = params['l2b'][i]
-        
-        
-        body_segments = 8
-        limbs = 4
         
         coupling = np.zeros([20,20])
         
@@ -170,14 +168,17 @@ class RobotParameters(dict):
                 elif isBody(i) and isBody(j):
                     if bodyOnSameSide(i, j) and j==i+1:
                         coupling[i,j] = b2b_same
-                        coupling[j,i] = - b2b_same
+                        if couplingM:
+                            coupling[j,i] = b2b_same
+                        else:
+                            coupling[j,i] = - b2b_same
                     elif bodyOnOppSide(i, j) and abs(i-j)==8:
                         coupling[i,j] = b2b_opp
                         
                 elif isLimb(i) and isLimb(j):
                     if limbOnSameSide(i, j):
                         coupling[i,j] = l2l_same
-                    elif limbOnOppSide(i, j) and abs(i-j)==2:
+                    elif limbOnOppSide(i, j) and (abs(i-j)==2 or (abs(i-j)==1 and not(i==17 and j==18) and not(i==18 and j==17))):
                         coupling[i,j] = l2l_opp
                 
                 elif isBody(i) and isLimb(j):

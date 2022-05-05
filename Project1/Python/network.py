@@ -102,8 +102,11 @@ class SalamandraNetwork:
 
     def outputs(self, iteration=None):
         """Oscillator outputs"""
-        # Implement equation here
-        return np.zeros(12)
+        
+        phases = self.state.phases(iteration=iteration)
+        amplitudes = self.state.amplitudes(iteration=iteration)
+        
+        return amplitudes*(1+np.cos(phases))
 
     def get_motor_position_output(self, iteration=None):
         """Get motor position"""
