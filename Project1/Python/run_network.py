@@ -97,32 +97,58 @@ def run_network(duration, update=False, drive=0):
 
 def generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, drives):
     fig, axs = plt.subplots(4, 1)
-    
-    plot_phase(phases_log)
-    plot_amplitude(amplitudes_log)
-    plot_output(outputs_log)
-    plot_freq(times, freqs_log, axs)
+    #plot_amplitude(amplitudes_log)
+    plot_output(times, outputs_log, axs)
+    #plot_freq(times, freqs_log, axs)
     plot_drive(times, drives, axs)
+    
+    plt.show()
+    
+    
+    fig2, axs2 = plt.subplots(2,1)
+    plot_freq(drives, freqs_log, axs2)
+    plot_amplitude(drives, amplitudes_log, axs2)
     
     
     plt.show()
 
-def plot_phase(phases_log):
-    return
-def plot_amplitude(amplitudes_log):
-    return
-def plot_output(outputs_log):
-    return
 
-def plot_freq(times, freqs_log, axs):
-    print(freqs_log)
-    #ax = fig.add_subplot(111)
-    axs[2].plot(times, freqs_log, color='k')
+def plot_amplitude(drives, amplitudes_log, axs):
+    axs[1].plot(drives, amplitudes_log[:,1], color='k', label='Body')
+    axs[1].plot(drives, amplitudes_log[:,16], color='k', linestyle='--', label='Limb')
+    axs[1].set_xlim(0,6)
+    axs[1].set_ylim(0,0.7)
+    
+    axs[1].set_xlabel('drive')
+    axs[1].set_ylabel('R')
+    
+    axs[1].legend()
+    
+    return
+def plot_output(times, outputs_log, axs):
+    print(outputs_log.shape)
+    axs[0].plot(times, outputs_log)
+    
+    axs[1].plot(times, outputs_log[:,10], color='blue')
+    axs[1].plot(times, outputs_log[:,12], color='green')
+    
+    
+
+def plot_freq(drives, freqs_log, axs):
+
+    axs[0].plot(drives, freqs_log[:,1], color='k', label='Body')
+    axs[0].plot(drives, freqs_log[:,16], color='k', linestyle='--', label='Limb')
+    axs[0].set_xlim(0,6)
+    axs[0].set_ylim(0,1.5)
+    
+    axs[0].set_ylabel('v [Hz]')
+    
+    axs[0].legend()
     
     
 
 def plot_drive(times, drives, axs):
-    #ax = fig.add_subplot(111)
+    
     supLimb= False
     supBody = False
     supAll = False
@@ -153,7 +179,7 @@ def plot_drive(times, drives, axs):
 def main(plot):
     """Main"""
 
-    run_network(duration=5)
+    run_network(duration=5, update=True)
 
     # Show plots
     if plot:
