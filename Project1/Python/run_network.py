@@ -145,7 +145,7 @@ def plot_output(times, outputs_log, axs):
     axs[0].set_xlim(0, times[-1])
     
     axs[1].plot(times, outputs_log[:,9], color='blue')
-    axs[1].plot(times, outputs_log[:,11]  + np.pi, color='green')
+    axs[1].plot(times, outputs_log[:,11]  + 1, color='green')
     axs[1].set_ylabel('x Limb')
     axs[1].set_yticklabels([])
     axs[1].set_xlim(0, times[-1])
@@ -176,7 +176,7 @@ def plot_drive(times, drives, outputs_log, thetadot_log, axs):
     for i,d in enumerate(drives):
         if d>1 and not supLimb:
             axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8])*1.1, linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+np.pi), linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+1), linestyle='--', color='grey')
             axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
             axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
             axs[3].text(0.2, 0.45,'Walking' ,horizontalalignment='center',
@@ -184,7 +184,7 @@ def plot_drive(times, drives, outputs_log, thetadot_log, axs):
             supLimb = True
         if d>3 and not supBody:
             axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8]*1.1), linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+np.pi), linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+1), linestyle='--', color='grey')
             axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
             axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
             axs[3].text(0.6, 0.8,'Swimming' ,horizontalalignment='center',
@@ -192,7 +192,7 @@ def plot_drive(times, drives, outputs_log, thetadot_log, axs):
             supBody = True
         elif d>5 and not supAll:
             axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8]*1.1), linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+np.pi), linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+1), linestyle='--', color='grey')
             axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
             axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
             supAll = True
@@ -209,7 +209,7 @@ def plot_drive(times, drives, outputs_log, thetadot_log, axs):
 def main(plot):
     """Main"""
 
-    run_network(duration=10, update=True)
+    run_network(duration=20, update=True)
 
     # Show plots
     if plot:

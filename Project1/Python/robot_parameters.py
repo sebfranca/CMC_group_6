@@ -30,7 +30,6 @@ class RobotParameters(dict):
         self.rates = 20*np.ones(self.n_oscillators)
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
-        self.swimming = False
 
         self.update(parameters)
 
@@ -61,10 +60,7 @@ class RobotParameters(dict):
         for i in range(16,20):
             if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
                 freqs[i] = f_drive_limb(d)
-                self.swimming = False
-        
-        if limbSaturatesHigh(d): self.swimming = True
-        
+               
         self.freqs = freqs
         #print(freqs[16:])
 
@@ -107,12 +103,14 @@ class RobotParameters(dict):
         r_drive_body = lambda x: 0.065*x + 0.196
         r_drive_limb = lambda x: 0.131*x + 0.131
         
+        
         for i in range(16):
             if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
                 nominal_amplitudes[i] = r_drive_body(d)
         for i in range(16,20):
             if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
                 nominal_amplitudes[i] = r_drive_limb(d)
+
         
         self.nominal_amplitudes = nominal_amplitudes
         #print(nominal_amplitudes[16:])
