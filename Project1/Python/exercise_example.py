@@ -9,7 +9,7 @@ from simulation_parameters import SimulationParameters
 
 def exercise_example(timestep):
     """Exercise example"""
-    drive=3.5
+    drive=1.5
     # Parameters
     parameter_set = [
         SimulationParameters(
