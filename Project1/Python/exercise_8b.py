@@ -9,17 +9,37 @@ from simulation_parameters import SimulationParameters
 
 def exercise_8b(timestep=1e-2, duration=20):
     """Exercise 8b"""
+    grid_id = 0 #to avoid overwriting, identify each grid w/ a number
+      
+    
+    
+    
+    
+    
+    
     phase_lag_params = {
-        'b2b_same' : [10,10],
-        'b2b_opp' : [10,10],
-        'l2l_same' : [10,10],
-        'l2l_opp' : [10,10],
-        'l2b' : [30,30]
+        'b2b_same' : [10,5],
+        'b2b_opp' : [10,5],
+        'l2l_same' : [10,3],
+        'l2l_opp' : [10,4],
+        'l2b' : [30,-3]
         }
     amplitude_params = {
         'amplitude_limbs' : [1,2],
-        'amplitude_body' : [1,2]
+        'amplitude_body' : [1,4]
         }
+    
+    #can do this kind of initialization instead, for a "systemic" exploration:
+    # phase_lag_params = {
+    #      'b2b_same' : [0.1*i for i in range(5)],
+    #      'b2b_opp' : [0.1*i for i in range(5)],
+    #      'l2l_same' : [0.1*i for i in range(5)],
+    #      'l2l_opp' : [0.1*i for i in range(5)],
+    #      'l2b' : [0.3*i for i in range(5)]
+    #      }  
+    
+    
+    
     
     phase_lag = []
     amplitudes = []

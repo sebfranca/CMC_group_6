@@ -92,21 +92,25 @@ def plot_2d(results, labels, n_data=300, log=False, cmap=None):
 
 def main(plot=True):
     """Main"""
-    # Load data
-    data = SalamandraData.from_file('logs/example/simulation_0.h5')
-    with open('logs/example/simulation_0.pickle', 'rb') as param_file:
+    grid_id = 0
+    
+    
+    sim_id = 0 #need to move this to a for loop
+    
+    #Load data
+    data = SalamandraData.from_file('logs/grid{}/simulation_{}'.format(grid_id,sim_id))
+    with open('logs/grid{}/simulation_{}.pickle'.format(grid_id,sim_id),'rb') as param_file:
         parameters = pickle.load(param_file)
     timestep = data.timestep
     n_iterations = np.shape(data.sensors.links.array)[0]
     times = np.arange(
         start=0,
-        stop=timestep*n_iterations,
-        step=timestep,
-    )
+        stop = timestep*n_iterations,
+        step = timestep,)
     timestep = times[1] - times[0]
     amplitudes = parameters.nominal_amplitudes
     phase_lag_body = parameters.phase_lag_body
-    osc_phases = data.state.phases()
+    osc_phases = data.state.pahses()
     osc_amplitudes = data.state.amplitudes()
     links_positions = data.sensors.links.urdf_positions()
     head_positions = links_positions[:, 0, :]
@@ -114,22 +118,58 @@ def main(plot=True):
     joints_positions = data.sensors.joints.positions_all()
     joints_velocities = data.sensors.joints.velocities_all()
     joints_torques = data.sensors.joints.motor_torques_all()
-    # Notes:
-    # For the links arrays: positions[iteration, link_id, xyz]
-    # For the positions arrays: positions[iteration, xyz]
-    # For the joints arrays: positions[iteration, joint]
-
+    #     # Notes:
+    #     # For the links arrays: positions[iteration, link_id, xyz]
+    #     # For the positions arrays: positions[iteration, xyz]
+    #     # For the joints arrays: positions[iteration, joint]
+    
     # Plot data
     plt.figure('Positions')
     plot_positions(times, head_positions)
     plt.figure('Trajectory')
-    plot_trajectory(head_positions)
-
-    # Show plots
-    if plot:
-        plt.show()
-    else:
-        save_figures()
+    plot_trajectory(head_positions)    
+    
+# =============================================================================
+# Unmodified version
+#     # Load data
+#     data = SalamandraData.from_file('logs/example/simulation_0.h5')
+#     with open('logs/example/simulation_0.pickle', 'rb') as param_file:
+#         parameters = pickle.load(param_file)
+#     timestep = data.timestep
+#     n_iterations = np.shape(data.sensors.links.array)[0]
+#     times = np.arange(
+#         start=0,
+#         stop=timestep*n_iterations,
+#         step=timestep,
+#     )
+#     timestep = times[1] - times[0]
+#     amplitudes = parameters.nominal_amplitudes
+#     phase_lag_body = parameters.phase_lag_body
+#     osc_phases = data.state.phases()
+#     osc_amplitudes = data.state.amplitudes()
+#     links_positions = data.sensors.links.urdf_positions()
+#     head_positions = links_positions[:, 0, :]
+#     tail_positions = links_positions[:, 8, :]
+#     joints_positions = data.sensors.joints.positions_all()
+#     joints_velocities = data.sensors.joints.velocities_all()
+#     joints_torques = data.sensors.joints.motor_torques_all()
+#     # Notes:
+#     # For the links arrays: positions[iteration, link_id, xyz]
+#     # For the positions arrays: positions[iteration, xyz]
+#     # For the joints arrays: positions[iteration, joint]
+# 
+#     # Plot data
+#     plt.figure('Positions')
+#     plot_positions(times, head_positions)
+#     plt.figure('Trajectory')
+#     plot_trajectory(head_positions)
+# 
+#     # Show plots
+#     if plot:
+#         plt.show()
+#     else:
+#         save_figures()
+# =============================================================================
 
 
 if __name__ == '__main__':
