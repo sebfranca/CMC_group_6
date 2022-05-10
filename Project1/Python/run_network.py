@@ -78,6 +78,8 @@ def run_network(duration, update=False, drive=0):
         amplitudes_log[i+1, :] = network.state.amplitudes(iteration=i+1)
         outputs_log[i+1, :] = network.get_motor_position_output(iteration=i+1)
         freqs_log[i+1, :] = network.robot_parameters.freqs
+        
+    thetadot_log = calculate_thetadots(timestep, phases_log)
     # # Alternative option
     # phases_log[:, :] = network.state.phases()
     # amplitudes_log[:, :] = network.state.amplitudes()
@@ -92,15 +94,25 @@ def run_network(duration, update=False, drive=0):
 
     # Implement plots of network results
     pylog.warning('Implement plots')
-    generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, drives)
+    generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, thetadot_log, drives)
 
 
-def generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, drives):
+def calculate_thetadots(timestep, phases_log):
+    thetadot_log = np.zeros_like(phases_log)
+    for i in range(np.size(phases_log,0)-1):
+        #right approximation of derivative
+        thetadot_log[i,:] = (phases_log[i+1,:] - phases_log[i,:]) / (timestep*2*np.pi)
+    return thetadot_log
+
+
+    
+
+def generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, thetadot_log, drives):
     fig, axs = plt.subplots(4, 1)
     #plot_amplitude(amplitudes_log)
     plot_output(times, outputs_log, axs)
-    #plot_freq(times, freqs_log, axs)
-    plot_drive(times, drives, axs)
+    plot_thetadot(times, thetadot_log, axs)
+    plot_drive(times, drives, outputs_log, thetadot_log, axs)
     
     plt.show()
     
@@ -127,12 +139,21 @@ def plot_amplitude(drives, amplitudes_log, axs):
     return
 def plot_output(times, outputs_log, axs):
     print(outputs_log.shape)
-    axs[0].plot(times, outputs_log)
+    axs[0].plot(times, outputs_log[:,:8] - np.repeat(np.resize(np.linspace(0,8*np.pi/3,8),[1,8]),np.size(outputs_log,0),axis=0))
+    axs[0].set_ylabel('x Body')
+    axs[0].set_yticklabels([])
+    axs[0].set_xlim(0, times[-1])
     
-    axs[1].plot(times, outputs_log[:,10], color='blue')
-    axs[1].plot(times, outputs_log[:,12], color='green')
-    
-    
+    axs[1].plot(times, outputs_log[:,9], color='blue')
+    axs[1].plot(times, outputs_log[:,11]  + np.pi, color='green')
+    axs[1].set_ylabel('x Limb')
+    axs[1].set_yticklabels([])
+    axs[1].set_xlim(0, times[-1])
+
+def plot_thetadot(times,thetadot_log,axs):
+    axs[2].plot(times, thetadot_log, color='k')
+    axs[2].set_xlim(0, times[-1])
+    axs[2].set_ylabel('Freq [Hz]')
 
 def plot_freq(drives, freqs_log, axs):
 
@@ -147,24 +168,33 @@ def plot_freq(drives, freqs_log, axs):
     
     
 
-def plot_drive(times, drives, axs):
+def plot_drive(times, drives, outputs_log, thetadot_log, axs):
     
     supLimb= False
     supBody = False
     supAll = False
     for i,d in enumerate(drives):
         if d>1 and not supLimb:
-            plt.vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
-            plt.text(0.2, 0.45,'Walking' ,horizontalalignment='center',
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8])*1.1, linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+np.pi), linestyle='--', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
+            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
+            axs[3].text(0.2, 0.45,'Walking' ,horizontalalignment='center',
      verticalalignment='center', transform = axs[3].transAxes)
             supLimb = True
         if d>3 and not supBody:
-            plt.vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
-            plt.text(0.6, 0.8,'Swimming' ,horizontalalignment='center',
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8]*1.1), linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+np.pi), linestyle='--', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
+            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
+            axs[3].text(0.6, 0.8,'Swimming' ,horizontalalignment='center',
      verticalalignment='center', transform = axs[3].transAxes)
             supBody = True
         elif d>5 and not supAll:
-            plt.vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8]*1.1), linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+np.pi), linestyle='--', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
+            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
             supAll = True
     
     axs[3].plot(times,drives, 'k')
@@ -179,7 +209,7 @@ def plot_drive(times, drives, axs):
 def main(plot):
     """Main"""
 
-    run_network(duration=5, update=True)
+    run_network(duration=10, update=True)
 
     # Show plots
     if plot:

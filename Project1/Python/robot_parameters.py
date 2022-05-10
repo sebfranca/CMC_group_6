@@ -30,6 +30,7 @@ class RobotParameters(dict):
         self.rates = 20*np.ones(self.n_oscillators)
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
+        self.swimming = False
 
         self.update(parameters)
 
@@ -60,6 +61,9 @@ class RobotParameters(dict):
         for i in range(16,20):
             if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
                 freqs[i] = f_drive_limb(d)
+                self.swimming = False
+        
+        if limbSaturatesHigh(d): self.swimming = True
         
         self.freqs = freqs
         #print(freqs[16:])
@@ -139,7 +143,7 @@ class RobotParameters(dict):
         l2l_opp = params['l2l_opp'][i]
         l2b = params['l2b'][i]
         
-        coupling = np.zeros([20,20])
+        matrix = np.zeros([20,20])
         
         isLimb = lambda j: j in [16,17,18,19]
         isBody = lambda i: i in [i for i in range(16)]
@@ -162,28 +166,57 @@ class RobotParameters(dict):
         backBodies = [4,5,6,7, 12,13,14,15]
         
         for i in range(20):
-            for j in range(20):
-                if i==j: pass
+            if isBody(i):
+                j = i+1
+                if bodyOnSameSide(i, j):
+                    matrix[i,j] = b2b_same
+                    
+                    if couplingM: matrix[j,i] = b2b_same
+                    else: matrix[j,i] = -b2b_same
                 
-                elif isBody(i) and isBody(j):
-                    if bodyOnSameSide(i, j) and j==i+1:
-                        coupling[i,j] = b2b_same
-                        if couplingM:
-                            coupling[j,i] = b2b_same
-                        else:
-                            coupling[j,i] = - b2b_same
-                    elif bodyOnOppSide(i, j) and abs(i-j)==8:
-                        coupling[i,j] = b2b_opp
+                j = i+8
+                if bodyOnOppSide(i, j):
+                    matrix[i,j] = b2b_opp
+                    matrix[j,i] = b2b_opp
+                
+            if isLimb(i):
+                for j in range(i+1,i+4):
+                    if j<20 and limbOnSameSide(i, j) and i in frontLimbs and j in backLimbs:
+                        matrix[i,j] = l2l_same
+                        matrix[j,i] = l2l_same
+                    elif j<20 and limbOnOppSide(i, j) and ((i in frontLimbs and j in frontLimbs) or (i in backLimbs and j in backLimbs)):
+                        matrix[i,j] = l2l_opp
+                        matrix[j,i] = l2l_opp
+                for j in range(16):
+                    if (i in frontLimbs and j in frontBodies) or (i in backLimbs and j in backBodies):
+                        if bodyLimbOnSameSide(j,i):
+                            matrix[i,j] = l2b
                         
-                elif isLimb(i) and isLimb(j):
-                    if limbOnSameSide(i, j):
-                        coupling[i,j] = l2l_same
-                    elif limbOnOppSide(i, j) and (abs(i-j)==2 or (abs(i-j)==1 and not(i==17 and j==18) and not(i==18 and j==17))):
-                        coupling[i,j] = l2l_opp
+        
+        
+        # for i in range(20):
+        #     for j in range(20):
+        #         if i==j: pass
                 
-                elif isBody(i) and isLimb(j):
-                    if bodyLimbOnSameSide(i, j):
-                        if (j in frontLimbs and i in frontBodies) or (j in backLimbs and i in backBodies):
-                            coupling[j,i] = l2b
+        #         elif isBody(i) and isBody(j):
+        #             if bodyOnSameSide(i, j) and j==i+1:
+        #                 matrix[i,j] = b2b_same
+        #                 if couplingM:
+        #                     matrix[j,i] = b2b_same
+        #                 else:
+        #                     matrix[j,i] = - b2b_same
+        #             elif bodyOnOppSide(i, j) and abs(i-j)==8:
+        #                 matrix[i,j] = b2b_opp
+                        
+        #         elif isLimb(i) and isLimb(j):
+        #             if limbOnSameSide(i, j):
+        #                 matrix[i,j] = l2l_same
+        #             elif limbOnOppSide(i, j) and (abs(i-j)==2 or (abs(i-j)==1 and not(i==17 and j==18) and not(i==18 and j==17))):
+        #                 matrix[i,j] = l2l_opp
+                
+        #         elif isBody(i) and isLimb(j):
+        #             if bodyLimbOnSameSide(i, j):
+        #                 if (j in frontLimbs and i in frontBodies) or (j in backLimbs and i in backBodies):
+        #                     matrix[j,i] = l2b
 
-        return coupling
+        return matrix
