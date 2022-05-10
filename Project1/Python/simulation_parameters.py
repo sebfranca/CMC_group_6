@@ -16,7 +16,11 @@ class SimulationParameters:
         self.phase_lag_body = None
         self.amplitude_gradient = None
         
-        self.drive_mlr = kwargs.get("drive_mlr",2)
+        self.drive_mlr = kwargs.get("drive_mlr",2) #default = 2
+        self.exercise_8b = False
+        self.nominal_amplitudes = kwargs.get("nominal_amplitudes",np.zeros(20))
+        self.phase_bias = kwargs.get("phase_bias",np.zeros([20,20]))
+        
         # Feel free to add more parameters (ex: MLR drive)
         # self.drive_mlr = ...
         # ...

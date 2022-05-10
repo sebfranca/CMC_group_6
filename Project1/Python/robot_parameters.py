@@ -30,11 +30,14 @@ class RobotParameters(dict):
         self.rates = 20*np.ones(self.n_oscillators)
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
+        self.exercise_8b = False
 
         self.update(parameters)
 
     def update(self, parameters):
         """Update network from parameters"""
+        self.exercise_8b = parameters.exercise_8b
+        
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
         self.set_phase_bias(parameters)  # phi_ij
@@ -77,7 +80,10 @@ class RobotParameters(dict):
         
     def set_phase_bias(self, parameters):
         """Set phase bias"""
-        phase_lag_params = {
+        if self.exercise_8b:
+            self.phase_bias = parameters.phase_bias
+        else:
+            phase_lag_params = {
             'b2b_same' : [-2*np.pi/8],
             'b2b_opp' : [np.pi],
             'l2l_same' : [np.pi],
@@ -85,7 +91,7 @@ class RobotParameters(dict):
             'l2b' : [0]
             }
         
-        self.phase_bias = self.make_matrix(phase_lag_params, couplingM=False)
+            self.phase_bias = self.make_matrix(phase_lag_params, couplingM=False)
 
     def set_amplitudes_rate(self, parameters):
         """Set amplitude rates"""
@@ -93,26 +99,29 @@ class RobotParameters(dict):
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
-        d = parameters.drive_mlr
-        nominal_amplitudes = np.zeros(20)
-        
-        limbSaturatesLow = lambda x: x<1
-        limbSaturatesHigh = lambda x: x>3
-        bodySaturatesLow = lambda x: x<1
-        bodySaturatesHigh = lambda x: x>5
-        r_drive_body = lambda x: 0.065*x + 0.196
-        r_drive_limb = lambda x: 0.131*x + 0.131
-        
-        
-        for i in range(16):
-            if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
-                nominal_amplitudes[i] = r_drive_body(d)
-        for i in range(16,20):
-            if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
-                nominal_amplitudes[i] = r_drive_limb(d)
-
-        
-        self.nominal_amplitudes = nominal_amplitudes
+        if self.exercise_8b:
+            self.nominal_amplitudes = parameters.nominal_amplitudes
+        else:
+            d = parameters.drive_mlr
+            nominal_amplitudes = np.zeros(20)
+            
+            limbSaturatesLow = lambda x: x<1
+            limbSaturatesHigh = lambda x: x>3
+            bodySaturatesLow = lambda x: x<1
+            bodySaturatesHigh = lambda x: x>5
+            r_drive_body = lambda x: 0.065*x + 0.196
+            r_drive_limb = lambda x: 0.131*x + 0.131
+            
+            
+            for i in range(16):
+                if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
+                    nominal_amplitudes[i] = r_drive_body(d)
+            for i in range(16,20):
+                if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
+                    nominal_amplitudes[i] = r_drive_limb(d)
+    
+            
+            self.nominal_amplitudes = nominal_amplitudes
         #print(nominal_amplitudes[16:])
 
     def set_feedback_gains(self, parameters):

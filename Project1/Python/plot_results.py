@@ -104,7 +104,7 @@ def main(plot=True):
         step=timestep,
     )
     timestep = times[1] - times[0]
-    amplitudes = parameters.amplitudes
+    amplitudes = parameters.nominal_amplitudes
     phase_lag_body = parameters.phase_lag_body
     osc_phases = data.state.phases()
     osc_amplitudes = data.state.amplitudes()
