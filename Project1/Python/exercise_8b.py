@@ -12,21 +12,16 @@ def exercise_8b(timestep=1e-2, duration=20):
     grid_id = 0 #to avoid overwriting, identify each grid w/ a number
       
     
-    
-    
-    
-    
-    
     phase_lag_params = {
-        'b2b_same' : [10,5],
-        'b2b_opp' : [10,5],
-        'l2l_same' : [10,3],
-        'l2l_opp' : [10,4],
-        'l2b' : [30,-3]
+        'b2b_same' : np.linspace(0,4*np.pi/8,10),
+        'b2b_opp' : np.linspace(0,0,10),
+        'l2l_same' : np.linspace(0,2*np.pi,10),
+        'l2l_opp' : np.linspace(0,2*np.pi,10),
+        'l2b' : np.linspace(0,0,10)
         }
     amplitude_params = {
-        'amplitude_limbs' : [1,2],
-        'amplitude_body' : [1,4]
+        'amplitude_limbs' : np.linspace(0,4,10),
+        'amplitude_body' : np.linspace(0,4,10)
         }
     
     #can do this kind of initialization instead, for a "systemic" exploration:
@@ -71,9 +66,9 @@ def exercise_8b(timestep=1e-2, duration=20):
         ]
     
     
-    os.makedirs('./logs/example/', exist_ok=True)
+    os.makedirs('./logs/grid{}/'.format(grid_id), exist_ok=True)
     for simulation_i, sim_parameters in enumerate(parameter_set):
-        filename = './logs/example/simulation_{}.{}'
+        filename = './logs/grid{}/simulation_{}.{}'
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
@@ -82,9 +77,9 @@ def exercise_8b(timestep=1e-2, duration=20):
             # record=True,  # Record video
         )
         # Log robot data
-        data.to_file(filename.format(simulation_i, 'h5'), sim.iteration)
+        data.to_file(filename.format(grid_id, simulation_i, 'h5'), sim.iteration)
         # Log simulation parameters
-        with open(filename.format(simulation_i, 'pickle'), 'wb') as param_file:
+        with open(filename.format(grid_id,simulation_i, 'pickle'), 'wb') as param_file:
             pickle.dump(sim_parameters, param_file)
 
 
