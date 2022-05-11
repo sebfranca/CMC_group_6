@@ -8,7 +8,7 @@ from matplotlib.colors import LogNorm
 from salamandra_simulation.data import SalamandraData
 from salamandra_simulation.parse_args import save_plots
 from salamandra_simulation.save_figures import save_figures
-
+from os.path import isfile
 
 def plot_positions(times, link_data):
     """Plot positions"""
@@ -94,40 +94,58 @@ def main(plot=True):
     """Main"""
     grid_id = 0
     
+    exists=True
+    max_iter = 0
+    while exists:
+        if not isfile('./logs/grid{}/simulation_{}.{}'.format(grid_id,max_iter,'pickle')):
+            exists = False
+            max_iter = max_iter-1
+        else: max_iter = max_iter + 1
     
-    sim_id = 0 #need to move this to a for loop
     
-    #Load data
-    data = SalamandraData.from_file('logs/grid{}/simulation_{}'.format(grid_id,sim_id))
-    with open('logs/grid{}/simulation_{}.pickle'.format(grid_id,sim_id),'rb') as param_file:
-        parameters = pickle.load(param_file)
-    timestep = data.timestep
-    n_iterations = np.shape(data.sensors.links.array)[0]
-    times = np.arange(
-        start=0,
-        stop = timestep*n_iterations,
-        step = timestep,)
-    timestep = times[1] - times[0]
-    amplitudes = parameters.nominal_amplitudes
-    phase_lag_body = parameters.phase_lag_body
-    osc_phases = data.state.pahses()
-    osc_amplitudes = data.state.amplitudes()
-    links_positions = data.sensors.links.urdf_positions()
-    head_positions = links_positions[:, 0, :]
-    tail_positions = links_positions[:, 8, :]
-    joints_positions = data.sensors.joints.positions_all()
-    joints_velocities = data.sensors.joints.velocities_all()
-    joints_torques = data.sensors.joints.motor_torques_all()
-    #     # Notes:
-    #     # For the links arrays: positions[iteration, link_id, xyz]
-    #     # For the positions arrays: positions[iteration, xyz]
-    #     # For the joints arrays: positions[iteration, joint]
+    results_speed = np.zeros((max_iter+1,3))    
+    results_energy = np.zeros((max_iter+1,3))
     
-    # Plot data
-    plt.figure('Positions')
-    plot_positions(times, head_positions)
-    plt.figure('Trajectory')
-    plot_trajectory(head_positions)    
+    for sim_id in range(max_iter):    
+        #Load data
+        data = SalamandraData.from_file('logs/grid{}/simulation_{}.{}'.format(grid_id,sim_id,'h5'))
+        with open('logs/grid{}/simulation_{}.pickle'.format(grid_id,sim_id),'rb') as param_file:
+            parameters = pickle.load(param_file)
+        timestep = data.timestep
+        n_iterations = np.shape(data.sensors.links.array)[0]
+        times = np.arange(
+            start=0,
+            stop = timestep*n_iterations,
+            step = timestep,)
+        timestep = times[1] - times[0]
+        amplitudes = parameters.nominal_amplitudes
+        phase_bias = parameters.phase_bias
+        osc_phases = data.state.phases()
+        osc_amplitudes = data.state.amplitudes()
+        links_positions = data.sensors.links.urdf_positions()
+        head_positions = links_positions[:, 0, :]
+        tail_positions = links_positions[:, 8, :]
+        joints_positions = data.sensors.joints.positions_all()
+        joints_velocities = data.sensors.joints.velocities_all()
+        joints_torques = data.sensors.joints.motor_torques_all()
+        #     # Notes:
+        #     # For the links arrays: positions[iteration, link_id, xyz]
+        #     # For the positions arrays: positions[iteration, xyz]
+        #     # For the joints arrays: positions[iteration, joint]
+        
+        #Might need to tweak this a bit
+        avg_speed = obtain_speed(times,head_positions)
+        results_speed[sim_id,:] = np.hstack((amplitudes[0,0], phase_bias[0,1], avg_speed))
+        tot_energy =  obtain_energy(timestep,joints_velocities,joints_torques)
+        results_energy[sim_id,:] = np.hstack((amplitudes[0,0], phase_bias[0,1], tot_energy))
+    
+    plt.figure("Speed") 
+    plot_2d(results_speed,["Body amplitude","Phase lag (rad)", "Average speed"])
+    plt.figure("Energy")
+    plot_2d(results_energy,["Body amplitude","Phase lag (rad)", "Total energy"])
+        
+        
+        
     
 # =============================================================================
 # Unmodified version
@@ -171,6 +189,38 @@ def main(plot=True):
 #         save_figures()
 # =============================================================================
 
+def obtain_speed(times, link_data):
+    """Returns the average velocity
+    Velocity is calculated as tot_distance/tot_time
+    (z is not taken into account)"""
+    x = link_data[:,0]
+    y = link_data[:,1]
+        
+    distance = np.sqrt((x[-1]-x[0])**2 + (y[-1]-y[0])**2)
+    t = times[-1] - times[0]
+    return distance/t
+
+def obtain_energy(timestep, joint_velocities, joint_torques):
+    """Returns the total energy spent
+    It is calculated as the integral of torque*velocity,
+    summed for all joints.
+    """
+    trapz = lambda dt, f_a, f_b : dt * (f_a+f_b)/2
+    
+    nb_timesteps = np.size(joint_velocities,0)
+    nb_joints = np.size(joint_velocities,1)
+    total_energy = 0
+    
+    for j in range(nb_joints):
+        for t in range(nb_timesteps-1):
+            vel0 = joint_velocities[t,j]
+            vel1 = joint_velocities[t+1,j]
+            tor0 = joint_torques[t,j]
+            tor1 = joint_torques[t+1,j]
+            
+            total_energy += trapz(timestep, vel0*tor0, vel1*tor1)
+    
+    return total_energy
 
 if __name__ == '__main__':
     main(plot=not save_plots())
