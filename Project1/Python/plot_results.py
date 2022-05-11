@@ -106,7 +106,7 @@ def main(plot=True):
     results_speed = np.zeros((max_iter+1,3))    
     results_energy = np.zeros((max_iter+1,3))
     
-    for sim_id in range(max_iter):    
+    for sim_id in range(max_iter+1):    
         #Load data
         data = SalamandraData.from_file('logs/grid{}/simulation_{}.{}'.format(grid_id,sim_id,'h5'))
         with open('logs/grid{}/simulation_{}.pickle'.format(grid_id,sim_id),'rb') as param_file:
@@ -143,6 +143,20 @@ def main(plot=True):
     plot_2d(results_speed,["Body amplitude","Phase lag (rad)", "Average speed"])
     plt.figure("Energy")
     plot_2d(results_energy,["Body amplitude","Phase lag (rad)", "Total energy"])
+    
+    #For interpretation: good to also know dependancy to drive ?
+    plt.figure("DriveAmplitude")
+    r_drive_body = lambda x: 0.065*x + 0.196
+    bodySaturatesLow = lambda x: x<1
+    bodySaturatesHigh = lambda x: x>5
+    x = np.linspace(0.8,6.2,100)
+    y = np.ones(100)
+    for i,x_elem in enumerate(x):
+        y[i] = r_drive_body(x_elem)*(not bodySaturatesLow(x_elem))*(not bodySaturatesHigh(x_elem))
+    plt.plot(x,y)
+    plt.grid()
+    plt.xlabel("Drive")
+    plt.ylabel("Amplitude")
         
         
         
