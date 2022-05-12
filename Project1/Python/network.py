@@ -37,7 +37,7 @@ def network_ode(_time, state, robot_parameters, loads):
     for i,thetai in enumerate(phases):
         rdot[i] = a[i] * (R[i] - amplitudes[i])
         for j,thetaj in enumerate(phases):
-            thetadot[i] = thetadot[i] + amplitudes[j]*omega[i,j]*np.sin(thetaj - thetai - phi[i,j])
+            thetadot[i] = thetadot[i] + amplitudes[j]*omega[j,i]*np.sin(thetaj - thetai - phi[j,i])
      
         
     return np.concatenate([thetadot, rdot])

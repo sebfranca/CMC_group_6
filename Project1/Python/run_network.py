@@ -138,7 +138,6 @@ def plot_amplitude(drives, amplitudes_log, axs):
     
     return
 def plot_output(times, outputs_log, axs):
-    print(outputs_log.shape)
     axs[0].plot(times, outputs_log[:,:8] - np.repeat(np.resize(np.linspace(0,8*np.pi/3,8),[1,8]),np.size(outputs_log,0),axis=0))
     axs[0].set_ylabel('x Body')
     axs[0].set_yticklabels([])
@@ -165,6 +164,10 @@ def plot_freq(drives, freqs_log, axs):
     axs[0].set_ylabel('v [Hz]')
     
     axs[0].legend()
+    
+    idx = [i for i,x in enumerate(freqs_log[:,1]) if x >= 1]
+    print(drives[idx[0]])
+    
     
     
 

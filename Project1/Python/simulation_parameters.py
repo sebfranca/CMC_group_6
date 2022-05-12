@@ -17,9 +17,11 @@ class SimulationParameters:
         self.amplitude_gradient = None
         
         self.drive_mlr = kwargs.get("drive_mlr",2)
-        # Feel free to add more parameters (ex: MLR drive)
-        # self.drive_mlr = ...
-        # ...
+        
+        # Exercise 8c
+        self.exercise_8b = False
+        self.exercise_8c = False
+        self.nominal_amplitudes_parameters = kwargs.get("nominal_amplitudes",np.zeros(2))
 
         # Disruptions
         self.set_seed = False
