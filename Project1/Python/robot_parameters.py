@@ -69,26 +69,26 @@ class RobotParameters(dict):
         
         #Turning modifications
         if self.turn is None:
-            d_r = d
-            d_l = d
+            self.d_r = d
+            self.d_l = d
         elif self.turn == "right":
-            d_r = d + self.drive_offset_turn
-            d_l = d - self.drive_offset_turn
+            self.d_r = d + self.drive_offset_turn
+            self.d_l = d - self.drive_offset_turn
         elif self.turn == "left":
-            d_r = d - self.drive_offset_turn
-            d_l = d + self.drive_offset_turn
+            self.d_r = d - self.drive_offset_turn
+            self.d_l = d + self.drive_offset_turn
         
             
         for i in range(16):
-            if i in left and not bodySaturatesHigh(d_l) and not bodySaturatesLow(d_l):
-                    freqs[i] = f_drive_body(d_l)
-            elif i in right and not bodySaturatesHigh(d_r) and not bodySaturatesLow(d_r):
-                    freqs[i] = f_drive_body(d_r)
+            if i in left and not bodySaturatesHigh(self.d_l) and not bodySaturatesLow(self.d_l):
+                    freqs[i] = f_drive_body(self.d_l)
+            elif i in right and not bodySaturatesHigh(self.d_r) and not bodySaturatesLow(self.d_r):
+                    freqs[i] = f_drive_body(self.d_r)
         for i in range(16,20):
-            if i in left and not limbSaturatesHigh(d_l) and not limbSaturatesLow(d_l):
-                    freqs[i] = f_drive_limb(d_l)
-            elif i in right and not limbSaturatesHigh(d_r) and not limbSaturatesLow(d_r):
-                    freqs[i] = f_drive_limb(d_r)
+            if i in left and not limbSaturatesHigh(self.d_l) and not limbSaturatesLow(self.d_l):
+                    freqs[i] = f_drive_limb(self.d_l)
+            elif i in right and not limbSaturatesHigh(self.d_r) and not limbSaturatesLow(self.d_r):
+                    freqs[i] = f_drive_limb(self.d_r)
                    
             
             
@@ -139,14 +139,14 @@ class RobotParameters(dict):
             
             #Turning modifications
             if self.turn is None:
-                d_r = d
-                d_l = d
+                self.d_r = d
+                self.d_l = d
             elif self.turn == "right":
-                d_r = d + self.drive_offset_turn
-                d_l = d - self.drive_offset_turn
+                self.d_r = d + self.drive_offset_turn
+                self.d_l = d - self.drive_offset_turn
             elif self.turn == "left":
-                d_r = d - self.drive_offset_turn
-                d_l = d + self.drive_offset_turn
+                self.d_r = d - self.drive_offset_turn
+                self.d_l = d + self.drive_offset_turn
             
                 
             limbSaturatesLow = lambda x: x<1
@@ -158,15 +158,15 @@ class RobotParameters(dict):
             
             
             for i in range(16):
-                if i in left and not bodySaturatesHigh(d_l) and not bodySaturatesLow(d_l):
-                        nominal_amplitudes[i] = r_drive_body(d_l)
-                elif i in right and not bodySaturatesHigh(d_r) and not bodySaturatesLow(d_r):
-                        nominal_amplitudes[i] = r_drive_body(d_r)
+                if i in left and not bodySaturatesHigh(self.d_l) and not bodySaturatesLow(self.d_l):
+                        nominal_amplitudes[i] = r_drive_body(self.d_l)
+                elif i in right and not bodySaturatesHigh(self.d_r) and not bodySaturatesLow(self.d_r):
+                        nominal_amplitudes[i] = r_drive_body(self.d_r)
             for i in range(16,20):
-                if i in left and not limbSaturatesHigh(d_l) and not limbSaturatesLow(d_l):
-                        nominal_amplitudes[i] = r_drive_limb(d_l)
-                elif i in right and not limbSaturatesHigh(d_r) and not limbSaturatesLow(d_r):
-                        nominal_amplitudes[i] = r_drive_limb(d_r)
+                if i in left and not limbSaturatesHigh(self.d_l) and not limbSaturatesLow(self.d_l):
+                        nominal_amplitudes[i] = r_drive_limb(self.d_l)
+                elif i in right and not limbSaturatesHigh(self.d_r) and not limbSaturatesLow(self.d_r):
+                        nominal_amplitudes[i] = r_drive_limb(self.d_r)
             
             
         
