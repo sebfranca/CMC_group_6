@@ -31,14 +31,18 @@ class RobotParameters(dict):
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
         self.exercise_8b = False
-        self.exercise_8d1 = False
+        
+        
+        self.turn = None
+        self.drive_offset_turn = parameters.drive_offset_turn
 
         self.update(parameters)
 
     def update(self, parameters):
         """Update network from parameters"""
         self.exercise_8b = parameters.exercise_8b
-        self.exercise_8d1 = parameters.exercise_8d1
+        self.turn = parameters.turn
+        
         
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
@@ -58,37 +62,34 @@ class RobotParameters(dict):
         
         freqs = np.zeros(20)
         
-        if not self.exercise_8d1:
-            d = parameters.drive_mlr
-            
-            for i in range(16):
-                if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
-                    freqs[i] = f_drive_body(d)
-            for i in range(16,20):
-                if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
-                    freqs[i] = f_drive_limb(d)
-                   
-            
+        d = parameters.drive_mlr
         
-        elif self.exercise_8d1:
-            d_r = parameters.drive_right
-            d_l = parameters.drive_left
+        left =  [0,1,2,3,4,5,6,7,16,18]
+        right = [8,9,10,11,12,13,14,15,17,19]
+        
+        #Turning modifications
+        if self.turn is None:
+            d_r = d
+            d_l = d
+        elif self.turn == "right":
+            d_r = d + self.drive_offset_turn
+            d_l = d - self.drive_offset_turn
+        elif self.turn == "left":
+            d_r = d - self.drive_offset_turn
+            d_l = d + self.drive_offset_turn
+        
             
-            left_idx = [0,1,2,3,4,5,6,7,16,18]
-            right_idx = [8,9,10,11,12,13,14,15,17,19]
-            
-            for i in range(16):
-                if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
-                    if i in left_idx:
-                        freqs[i] = f_drive_body(d_l)
-                    else:
-                        freqs[i] = f_drive_body(d_r)
-            for i in range(16,20):
-                if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
-                    if i in left_idx:
-                        freqs[i] = f_drive_limb(d_l)
-                    else:
-                        freqs[i] = f_drive_limb(d_r)
+        for i in range(16):
+            if i in left and not bodySaturatesHigh(d_l) and not bodySaturatesLow(d_l):
+                    freqs[i] = f_drive_body(d_l)
+            elif i in right and not bodySaturatesHigh(d_r) and not bodySaturatesLow(d_r):
+                    freqs[i] = f_drive_body(d_r)
+        for i in range(16,20):
+            if i in left and not limbSaturatesHigh(d_l) and not limbSaturatesLow(d_l):
+                    freqs[i] = f_drive_limb(d_l)
+            elif i in right and not limbSaturatesHigh(d_r) and not limbSaturatesLow(d_r):
+                    freqs[i] = f_drive_limb(d_r)
+                   
             
             
         self.freqs = freqs
@@ -128,10 +129,26 @@ class RobotParameters(dict):
         """Set nominal amplitudes"""
         if self.exercise_8b:
             self.nominal_amplitudes = parameters.nominal_amplitudes
+            
         else:
             d = parameters.drive_mlr
             nominal_amplitudes = np.zeros(20)
             
+            left =  [0,1,2,3,4,5,6,7,16,18]
+            right = [8,9,10,11,12,13,14,15,17,19]
+            
+            #Turning modifications
+            if self.turn is None:
+                d_r = d
+                d_l = d
+            elif self.turn == "right":
+                d_r = d + self.drive_offset_turn
+                d_l = d - self.drive_offset_turn
+            elif self.turn == "left":
+                d_r = d - self.drive_offset_turn
+                d_l = d + self.drive_offset_turn
+            
+                
             limbSaturatesLow = lambda x: x<1
             limbSaturatesHigh = lambda x: x>3
             bodySaturatesLow = lambda x: x<1
@@ -141,13 +158,18 @@ class RobotParameters(dict):
             
             
             for i in range(16):
-                if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
-                    nominal_amplitudes[i] = r_drive_body(d)
+                if i in left and not bodySaturatesHigh(d_l) and not bodySaturatesLow(d_l):
+                        nominal_amplitudes[i] = r_drive_body(d_l)
+                elif i in right and not bodySaturatesHigh(d_r) and not bodySaturatesLow(d_r):
+                        nominal_amplitudes[i] = r_drive_body(d_r)
             for i in range(16,20):
-                if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
-                    nominal_amplitudes[i] = r_drive_limb(d)
-    
+                if i in left and not limbSaturatesHigh(d_l) and not limbSaturatesLow(d_l):
+                        nominal_amplitudes[i] = r_drive_limb(d_l)
+                elif i in right and not limbSaturatesHigh(d_r) and not limbSaturatesLow(d_r):
+                        nominal_amplitudes[i] = r_drive_limb(d_r)
             
+            
+        
             self.nominal_amplitudes = nominal_amplitudes
         #print(nominal_amplitudes[16:])
 
