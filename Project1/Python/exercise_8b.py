@@ -9,7 +9,7 @@ from simulation_parameters import SimulationParameters
 
 def exercise_8b(timestep=1e-2, duration=20):
     """Exercise 8b"""
-    grid_id = 1 #to avoid overwriting, identify each grid w/ a number
+    grid_id = 2 #to avoid overwriting, identify each grid w/ a number
       
     
     phase_lag_params = {
@@ -57,8 +57,9 @@ def exercise_8b(timestep=1e-2, duration=20):
         spawn_position=[0, 0, 0.1],  # Robot position in [m]
         spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
         drive_mlr = 4,
-        nominal_amplitudes = grid['amplitudes'][i],
-        phase_bias = grid['phase_lags'][i]
+        nominal_amplitudes = grid['amplitudes'][i][0],
+        phase_bias = grid['phase_lags'][i],
+        exercise_8b = True
         )
         for i in range(len(grid['amplitudes']))
         ]
