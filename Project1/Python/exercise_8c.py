@@ -12,7 +12,7 @@ def exercise_8c(timestep=1e-2, duration=20):
     nominal_amplitude_parameters = []
     grid_id = 100
     
-    param_range = np.linspace(0, 1, 3) #change here
+    param_range = np.linspace(0, 1, 6) #change here
     for i in param_range:
         for j in param_range:
             nominal_amplitude_parameters.append([i,j])
@@ -21,6 +21,8 @@ def exercise_8c(timestep=1e-2, duration=20):
     grid = {'nominal_amplitude_parameters':[]}
     for idx, param in enumerate(nominal_amplitude_parameters):
             grid['nominal_amplitude_parameters'].append(param)
+    for i in range(len(grid['nominal_amplitude_parameters'])):
+            print(grid['nominal_amplitude_parameters'][i])
     
     parameter_set = [SimulationParameters(
         duration=duration,  # Simulation duration in [s]
@@ -30,7 +32,7 @@ def exercise_8c(timestep=1e-2, duration=20):
         
         
         drive_mlr = 3.5,
-        nominal_amplitude_parameters = grid['nominal_amplitude_parameters'][i], #[0],
+        nominal_amplitude_parameters = grid['nominal_amplitude_parameters'][i], 
         exercise_8c = True
 
         )

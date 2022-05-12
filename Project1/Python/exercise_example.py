@@ -9,7 +9,7 @@ from simulation_parameters import SimulationParameters
 
 def exercise_example(timestep):
     """Exercise example"""
-   #drive=1.5
+    drive=3.5
     # Parameters
     parameter_set = [
         SimulationParameters(
@@ -23,7 +23,7 @@ def exercise_example(timestep):
             turn=0,  # Another example
             # ...
         )
-        for drive in np.linspace(1, 4, 6)
+        #for drive in np.linspace(1, 4, 6)
         # for amplitudes in ...
         # for ...
     ]

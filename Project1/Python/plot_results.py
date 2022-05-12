@@ -139,7 +139,6 @@ def main(plot=True):
     plot_positions(times, head_positions)
     plt.figure('Trajectory')
     plot_trajectory(head_positions)'''
-    max_iter = 8
     for sim_id in range(max_iter+1):    
         data = SalamandraData.from_file('logs/grid{}/simulation_{}.{}'.format(grid_id,sim_id,'h5'))
         with open('logs/grid{}/simulation_{}.pickle'.format(grid_id,sim_id),'rb') as param_file:
