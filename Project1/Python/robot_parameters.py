@@ -31,7 +31,7 @@ class RobotParameters(dict):
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
         self.exercise_8b = False
-        
+        self.backward = False
         
         self.turn = None
         self.drive_offset_turn = parameters.drive_offset_turn
@@ -42,6 +42,7 @@ class RobotParameters(dict):
         """Update network from parameters"""
         self.exercise_8b = parameters.exercise_8b
         self.turn = parameters.turn
+        self.backward = parameters.backward
         
         
         self.set_frequencies(parameters)  # f_i
@@ -111,13 +112,22 @@ class RobotParameters(dict):
         if self.exercise_8b:
             self.phase_bias = parameters.phase_bias
         else:
-            phase_lag_params = {
-            'b2b_same' : [-2*np.pi/8],
-            'b2b_opp' : [np.pi],
-            'l2l_same' : [np.pi],
-            'l2l_opp' : [np.pi],
-            'l2b' : [0]
-            }
+            if self.backward:
+                phase_lag_params = {
+                'b2b_same' : [-2*np.pi/8],
+                'b2b_opp' : [np.pi],
+                'l2l_same' : [np.pi],
+                'l2l_opp' : [np.pi],
+                'l2b' : [0]
+                }
+            else:
+                phase_lag_params = {
+                'b2b_same' : [2*np.pi/8],
+                'b2b_opp' : [np.pi],
+                'l2l_same' : [np.pi],
+                'l2l_opp' : [np.pi],
+                'l2b' : [0]
+                }
         
             self.phase_bias = self.make_matrix(phase_lag_params, couplingM=False)
 

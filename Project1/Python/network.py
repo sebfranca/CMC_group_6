@@ -37,7 +37,7 @@ def network_ode(_time, state, robot_parameters, loads):
     for i,thetai in enumerate(phases):
         rdot[i] = a[i] * (R[i] - amplitudes[i])
         for j,thetaj in enumerate(phases):
-            thetadot[i] = thetadot[i] + amplitudes[j]*omega[i,j]*np.sin(thetaj - thetai - phi[i,j])
+            thetadot[i] = thetadot[i] + amplitudes[j]*omega[j,i]*np.sin(thetaj - thetai - phi[j,i])
      
         
     return np.concatenate([thetadot, rdot])
@@ -61,6 +61,8 @@ def motor_output(phases, amplitudes, iteration):
     """
     # Implement equation here
     q = np.zeros_like(phases)[:12] + np.zeros_like(amplitudes)[:12]
+    
+    
     for i,r in enumerate(amplitudes):
         if i<8:
             q[i] = r*(1+np.cos(phases[i])) - amplitudes[i+8]*(1+np.cos(phases[i+8]))

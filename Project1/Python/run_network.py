@@ -139,7 +139,7 @@ def plot_amplitude(drives, amplitudes_log, axs):
     return
 def plot_output(times, outputs_log, axs):
     print(outputs_log.shape)
-    axs[0].plot(times, outputs_log[:,:8] - np.repeat(np.resize(np.linspace(0,8*np.pi/3,8),[1,8]),np.size(outputs_log,0),axis=0))
+    axs[0].plot(times, outputs_log[:,:8] - np.repeat(np.resize(np.linspace(0,10*np.pi/3,8),[1,8]),np.size(outputs_log,0),axis=0))
     axs[0].set_ylabel('x Body')
     axs[0].set_yticklabels([])
     axs[0].set_xlim(0, times[-1])
@@ -154,6 +154,7 @@ def plot_thetadot(times,thetadot_log,axs):
     axs[2].plot(times, thetadot_log, color='k')
     axs[2].set_xlim(0, times[-1])
     axs[2].set_ylabel('Freq [Hz]')
+    axs[2].set_ylim(0,1.5*np.max(thetadot_log))
 
 def plot_freq(drives, freqs_log, axs):
 
