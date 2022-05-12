@@ -31,12 +31,14 @@ class RobotParameters(dict):
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
         self.exercise_8b = False
+        self.exercise_8d1 = False
 
         self.update(parameters)
 
     def update(self, parameters):
         """Update network from parameters"""
         self.exercise_8b = parameters.exercise_8b
+        self.exercise_8d1 = parameters.exercise_8d1
         
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
@@ -47,9 +49,6 @@ class RobotParameters(dict):
 
     def set_frequencies(self, parameters):
         """Set frequencies"""
-        d = parameters.drive_mlr
-        freqs = np.zeros(20)
-        
         limbSaturatesLow = lambda x: x<1
         limbSaturatesHigh = lambda x: x>3
         bodySaturatesLow = lambda x: x<1
@@ -57,13 +56,41 @@ class RobotParameters(dict):
         f_drive_body = lambda x: 0.2*x + 0.3
         f_drive_limb = lambda x: 0.2*x
         
-        for i in range(16):
-            if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
-                freqs[i] = f_drive_body(d)
-        for i in range(16,20):
-            if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
-                freqs[i] = f_drive_limb(d)
-               
+        freqs = np.zeros(20)
+        
+        if not self.exercise_8d1:
+            d = parameters.drive_mlr
+            
+            for i in range(16):
+                if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
+                    freqs[i] = f_drive_body(d)
+            for i in range(16,20):
+                if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
+                    freqs[i] = f_drive_limb(d)
+                   
+            
+        
+        elif self.exercise_8d1:
+            d_r = parameters.drive_right
+            d_l = parameters.drive_left
+            
+            left_idx = [0,1,2,3,4,5,6,7,16,18]
+            right_idx = [8,9,10,11,12,13,14,15,17,19]
+            
+            for i in range(16):
+                if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
+                    if i in left_idx:
+                        freqs[i] = f_drive_body(d_l)
+                    else:
+                        freqs[i] = f_drive_body(d_r)
+            for i in range(16,20):
+                if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
+                    if i in left_idx:
+                        freqs[i] = f_drive_limb(d_l)
+                    else:
+                        freqs[i] = f_drive_limb(d_r)
+            
+            
         self.freqs = freqs
         #print(freqs[16:])
 

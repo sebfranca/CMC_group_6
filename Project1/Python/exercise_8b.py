@@ -9,19 +9,19 @@ from simulation_parameters import SimulationParameters
 
 def exercise_8b(timestep=1e-2, duration=20):
     """Exercise 8b"""
-    grid_id = 0 #to avoid overwriting, identify each grid w/ a number
+    grid_id = 1 #to avoid overwriting, identify each grid w/ a number
       
     
     phase_lag_params = {
-        'b2b_same' : np.linspace(0,4*np.pi/8,10),
+        'b2b_same' : np.linspace(np.pi/8,3*np.pi/8,10),
         'b2b_opp' : np.linspace(0,0,10),
-        'l2l_same' : np.linspace(0,2*np.pi,10),
-        'l2l_opp' : np.linspace(0,2*np.pi,10),
+        'l2l_same' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,10),
+        'l2l_opp' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,10),
         'l2b' : np.linspace(0,0,10)
         }
     amplitude_params = {
-        'amplitude_limbs' : np.linspace(0,4,10),
-        'amplitude_body' : np.linspace(0,4,10)
+        'amplitude_limbs' : np.linspace(0,0.6,10),
+        'amplitude_body' : np.linspace(0,0.6,10)
         }
     
     #can do this kind of initialization instead, for a "systemic" exploration:
@@ -56,8 +56,6 @@ def exercise_8b(timestep=1e-2, duration=20):
         timestep=timestep,  # Simulation timestep in [s]
         spawn_position=[0, 0, 0.1],  # Robot position in [m]
         spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
-        
-        
         drive_mlr = 4,
         nominal_amplitudes = grid['amplitudes'][i],
         phase_bias = grid['phase_lags'][i]

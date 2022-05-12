@@ -92,7 +92,7 @@ def plot_2d(results, labels, n_data=300, log=False, cmap=None):
 
 def main(plot=True):
     """Main"""
-    grid_id = 0
+    grid_id = 1
     
     exists=True
     max_iter = 0
@@ -101,7 +101,6 @@ def main(plot=True):
             exists = False
             max_iter = max_iter-1
         else: max_iter = max_iter + 1
-    
     
     results_speed = np.zeros((max_iter+1,3))    
     results_energy = np.zeros((max_iter+1,3))
@@ -136,7 +135,16 @@ def main(plot=True):
         #Might need to tweak this a bit
         avg_speed = obtain_speed(times,head_positions)
         results_speed[sim_id,:] = np.hstack((amplitudes[0,0], phase_bias[0,1], avg_speed))
-        tot_energy =  obtain_energy(timestep,joints_velocities,joints_torques)
+        
+        tot_energy=np.sum(np.asarray(joints_velocities)*np.asarray(joints_torques)*timestep)
+        
+        tot_energy =  np.sum([[joints_velocities[t,j] * joints_torques[t,j] * timestep
+                               for j in range(np.size(joints_velocities,1))]
+                              for t in range(np.size(joints_velocities,0))]
+                             )
+        
+        
+        
         results_energy[sim_id,:] = np.hstack((amplitudes[0,0], phase_bias[0,1], tot_energy))
     
     plt.figure("Speed") 
@@ -219,6 +227,12 @@ def obtain_energy(timestep, joint_velocities, joint_torques):
     It is calculated as the integral of torque*velocity,
     summed for all joints.
     """
+    
+    
+    
+    
+    
+    
     trapz = lambda dt, f_a, f_b : dt * (f_a+f_b)/2
     
     nb_timesteps = np.size(joint_velocities,0)
@@ -232,7 +246,7 @@ def obtain_energy(timestep, joint_velocities, joint_torques):
             tor0 = joint_torques[t,j]
             tor1 = joint_torques[t+1,j]
             
-            total_energy += trapz(timestep, vel0*tor0, vel1*tor1)
+            total_energy += trapz(timestep, abs(vel0*tor0), abs(vel1*tor1))
     
     return total_energy
 

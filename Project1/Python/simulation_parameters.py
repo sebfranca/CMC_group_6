@@ -17,7 +17,11 @@ class SimulationParameters:
         self.amplitude_gradient = None
         
         self.drive_mlr = kwargs.get("drive_mlr",2) #default = 2
-        self.exercise_8b = False
+        self.exercise_8b = kwargs.get("exercise_8b",False)
+        self.exercise_8d1 = kwargs.get("exercise_8d1",False)
+        self.drive_left = kwargs.get("drive_left",1)
+        self.drive_right = kwargs.get("drive_right",1)
+        
         self.nominal_amplitudes = kwargs.get("nominal_amplitudes",np.zeros(20))
         self.phase_bias = kwargs.get("phase_bias",np.zeros([20,20]))
         
