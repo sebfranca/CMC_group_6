@@ -41,32 +41,24 @@ def exercise_8b(timestep):
         'l2l_opp' : [10],
         'l2b' : [30]
         }
-    coupling_params = {
-        'b2b_same' : [10],
-        'b2b_opp' : [10],
-        'l2l_same' : [10],
-        'l2l_opp' : [10],
-        'l2b' : [30]
+    amplitude_params = {
+        'amplitude_limbs' : [1],
+        'amplitude_body' : [1]
         }
     
-    couplings = []
     phase_lag = []
+    amplitudes = []
     
     for i in range(len(phase_lag_params['l2b'])):
-        couplings.append(make_matrix(coupling_params,i))
         phase_lag.append(make_matrix(phase_lag_params,i))
-
-    # #Implement the phase lags and amplitudes we want to explore here
-    # phase_lags = [1,2,3]
-    # amplitudes = [4,5,6]
+        amplitudes.append(make_amplitudes(amplitude_params,i))
     
-    
-    # #make a 1D grid that covers all combinations
-    # grid = {'amplitudes':[],'phase_lags':[]}
-    # for i,amp in enumerate(amplitudes):
-    #     for j,lag in enumerate(phase_lags):
-    #         grid['amplitudes'].append(amp)
-    #         grid['phase_lags'].append(lag)
+    #make a 1D grid that covers all combinations
+    grid = {'amplitudes':[],'phase_lags':[]}
+    for i,amp in enumerate(amplitudes):
+        for j,lag in enumerate(phase_lag):
+            grid['amplitudes'].append(amp)
+            grid['phase_lags'].append(lag)
     
     # parameter_set = [SimulationParameters(
     #     duration = 10,

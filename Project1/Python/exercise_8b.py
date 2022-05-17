@@ -9,31 +9,22 @@ from simulation_parameters import SimulationParameters
 
 def exercise_8b(timestep=1e-2, duration=20):
     """Exercise 8b"""
-    grid_id = 2 #to avoid overwriting, identify each grid w/ a number
+    grid_id = 12 #to avoid overwriting, identify each grid w/ a number
       
+    gridsize_phase = 10
+    gridsize_amp = 10
     
     phase_lag_params = {
-        'b2b_same' : np.linspace(np.pi/8,3*np.pi/8,10),
-        'b2b_opp' : np.linspace(0,0,10),
-        'l2l_same' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,10),
-        'l2l_opp' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,10),
-        'l2b' : np.linspace(0,0,10)
+        'b2b_same' : np.linspace(np.pi/8,3*np.pi/8,gridsize_phase),
+        'b2b_opp' : np.linspace(0,0,gridsize_phase),
+        'l2l_same' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,gridsize_phase),
+        'l2l_opp' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,gridsize_phase),
+        'l2b' : np.linspace(0,0,gridsize_phase)
         }
     amplitude_params = {
-        'amplitude_limbs' : np.linspace(0,0.6,10),
-        'amplitude_body' : np.linspace(0,0.6,10)
+        'amplitude_limbs' : np.linspace(0,0.6,gridsize_amp),
+        'amplitude_body' : np.linspace(0,0.6,gridsize_amp)
         }
-    
-    #can do this kind of initialization instead, for a "systemic" exploration:
-    # phase_lag_params = {
-    #      'b2b_same' : [0.1*i for i in range(5)],
-    #      'b2b_opp' : [0.1*i for i in range(5)],
-    #      'l2l_same' : [0.1*i for i in range(5)],
-    #      'l2l_opp' : [0.1*i for i in range(5)],
-    #      'l2b' : [0.3*i for i in range(5)]
-    #      }  
-    
-    
     
     
     phase_lag = []
@@ -42,14 +33,7 @@ def exercise_8b(timestep=1e-2, duration=20):
     for i in range(len(phase_lag_params['l2b'])):
         phase_lag.append(make_matrix(phase_lag_params,i, couplingM=False))
         amplitudes.append(make_amplitudes(amplitude_params,i))
-    
-    #make a 1D grid that covers all combinations
-    grid = {'amplitudes':[],'phase_lags':[]}
-    for i,amp in enumerate(amplitudes):
-        for j,lag in enumerate(phase_lag):
-            grid['amplitudes'].append(amp)
-            grid['phase_lags'].append(lag)
-    
+      
     
     parameter_set = [SimulationParameters(
         duration=duration,  # Simulation duration in [s]
@@ -57,11 +41,12 @@ def exercise_8b(timestep=1e-2, duration=20):
         spawn_position=[0, 0, 0.1],  # Robot position in [m]
         spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
         drive_mlr = 4,
-        nominal_amplitudes = grid['amplitudes'][i][0],
-        phase_bias = grid['phase_lags'][i],
+        nominal_amplitudes = nom_amp[0],
+        phase_bias = lag,
         exercise_8b = True
         )
-        for i in range(len(grid['amplitudes']))
+        for nom_amp in amplitudes
+        for lag in phase_lag
         ]
     
     

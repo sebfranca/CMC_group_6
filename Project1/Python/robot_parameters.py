@@ -69,15 +69,16 @@ class RobotParameters(dict):
         right = [8,9,10,11,12,13,14,15,17,19]
         
         #Turning modifications
-        if self.turn is None:
-            self.d_r = d
-            self.d_l = d
-        elif self.turn == "right":
+        
+        if self.turn == "right":
             self.d_r = d + self.drive_offset_turn
             self.d_l = d - self.drive_offset_turn
         elif self.turn == "left":
             self.d_r = d - self.drive_offset_turn
             self.d_l = d + self.drive_offset_turn
+        else:
+            self.d_r = d
+            self.d_l = d
         
             
         for i in range(16):
@@ -148,16 +149,15 @@ class RobotParameters(dict):
             right = [8,9,10,11,12,13,14,15,17,19]
             
             #Turning modifications
-            if self.turn is None:
-                self.d_r = d
-                self.d_l = d
-            elif self.turn == "right":
+            if self.turn == "right":
                 self.d_r = d + self.drive_offset_turn
                 self.d_l = d - self.drive_offset_turn
             elif self.turn == "left":
                 self.d_r = d - self.drive_offset_turn
                 self.d_l = d + self.drive_offset_turn
-            
+            else:
+                self.d_r = d
+                self.d_l = d
                 
             limbSaturatesLow = lambda x: x<1
             limbSaturatesHigh = lambda x: x>3

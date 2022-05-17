@@ -31,14 +31,21 @@ def network_ode(_time, state, robot_parameters, loads):
     a = robot_parameters.rates
     R = robot_parameters.nominal_amplitudes
     # Implement equation here
-    thetadot = 2*np.pi*robot_parameters.freqs
-    rdot = np.zeros_like(amplitudes)
     
-    for i,thetai in enumerate(phases):
-        rdot[i] = a[i] * (R[i] - amplitudes[i])
-        for j,thetaj in enumerate(phases):
-            thetadot[i] = thetadot[i] + amplitudes[j]*omega[j,i]*np.sin(thetaj - thetai - phi[j,i])
-     
+    #make a square matrix with phases and transpose it
+    theta_i = np.resize(np.repeat(phases,n_oscillators),[n_oscillators,n_oscillators]) 
+    theta_j = theta_i.T
+    
+    
+    sin_matrix = np.sin(theta_j - theta_i - robot_parameters.phase_bias.T).T
+    #must use the transpose of the transpose to have the correct result
+    #then take the diagonal of the resulting matrix
+    thetadot = 2*np.pi*robot_parameters.freqs + np.diagonal(
+                    np.dot(
+                        amplitudes* robot_parameters.coupling_weights.T,
+                        sin_matrix))
+    
+    rdot = a * (R-amplitudes)
         
     return np.concatenate([thetadot, rdot])
 
@@ -67,7 +74,7 @@ def motor_output(phases, amplitudes, iteration):
         if i<8:
             q[i] = r*(1+np.cos(phases[i])) - amplitudes[i+8]*(1+np.cos(phases[i+8]))
         elif i<12:
-            q[i] = amplitudes[i+8] * (1+ np.cos(phases[i+8]))
+            q[i] = phases[i+8] + np.pi/2
     return q
 
 

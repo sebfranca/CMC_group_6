@@ -92,79 +92,87 @@ def plot_2d(results, labels, n_data=300, log=False, cmap=None):
 
 def main(plot=True):
     """Main"""
-    grid_id = 1
+    ex = "8b"
     
-    exists=True
-    max_iter = 0
-    while exists:
-        if not isfile('./logs/grid{}/simulation_{}.{}'.format(grid_id,max_iter,'pickle')):
-            exists = False
-            max_iter = max_iter-1
-        else: max_iter = max_iter + 1
-    
-    results_speed = np.zeros((max_iter+1,3))    
-    results_energy = np.zeros((max_iter+1,3))
-    
-    for sim_id in range(max_iter+1):    
-        #Load data
-        data = SalamandraData.from_file('logs/grid{}/simulation_{}.{}'.format(grid_id,sim_id,'h5'))
+    if ex == "8b":
+        grid_id = 12
+        
+        exists=True
+        max_iter = 0
+        while exists:
+            if not isfile('./logs/grid{}/simulation_{}.{}'.format(grid_id,max_iter,'pickle')):
+                exists = False
+                max_iter = max_iter-1
+            else: max_iter = max_iter + 1
+        
+        results_speed = np.zeros((max_iter+1,3))    
+        results_energy = np.zeros((max_iter+1,3))
+        
+        for sim_id in range(max_iter+1):    
+            #Load data
+            data = SalamandraData.from_file('logs/grid{}/simulation_{}.{}'.format(grid_id,sim_id,'h5'))
+            with open('logs/grid{}/simulation_{}.pickle'.format(grid_id,sim_id),'rb') as param_file:
+                parameters = pickle.load(param_file)
+            timestep = data.timestep
+            n_iterations = np.shape(data.sensors.links.array)[0]
+            times = np.arange(
+                start=0,
+                stop = timestep*n_iterations,
+                step = timestep,)
+            timestep = times[1] - times[0]
+            amplitudes = parameters.nominal_amplitudes
+            phase_bias = parameters.phase_bias
+            osc_phases = data.state.phases()
+            osc_amplitudes = data.state.amplitudes()
+            links_positions = data.sensors.links.urdf_positions()
+            head_positions = links_positions[:, 0, :]
+            tail_positions = links_positions[:, 8, :]
+            joints_positions = data.sensors.joints.positions_all()
+            joints_velocities = data.sensors.joints.velocities_all()
+            joints_torques = data.sensors.joints.motor_torques_all()
+            #     # Notes:
+            #     # For the links arrays: positions[iteration, link_id, xyz]
+            #     # For the positions arrays: positions[iteration, xyz]
+            #     # For the joints arrays: positions[iteration, joint]
+            
+            #Might need to tweak this a bit
+            avg_speed = obtain_speed(times,head_positions)
+            results_speed[sim_id,:] = np.hstack((amplitudes[0], phase_bias[0,1], avg_speed))
+            
+            tot_energy=np.sum(np.asarray(joints_velocities)*np.asarray(joints_torques)*timestep)
+            
+            tot_energy =  np.sum([[joints_velocities[t,j] * joints_torques[t,j] * timestep
+                                   for j in range(np.size(joints_velocities,1))]
+                                  for t in range(np.size(joints_velocities,0))]
+                                 )
+            
+            
+            
+            results_energy[sim_id,:] = np.hstack((amplitudes[0], phase_bias[0,1], tot_energy))
+        
+        plt.figure("Speed") 
+        plot_2d(results_speed,["Body amplitude","Phase lag (rad)", "Average speed"])
+        plt.figure("Energy")
+        plot_2d(results_energy,["Body amplitude","Phase lag (rad)", "Total energy"])
+        
+        #For interpretation: good to also know dependancy to drive ?
+        plt.figure("DriveAmplitude")
+        r_drive_body = lambda x: 0.065*x + 0.196
+        bodySaturatesLow = lambda x: x<1
+        bodySaturatesHigh = lambda x: x>5
+        x = np.linspace(0.8,6.2,100)
+        y = np.ones(100)
+        for i,x_elem in enumerate(x):
+            y[i] = r_drive_body(x_elem)*(not bodySaturatesLow(x_elem))*(not bodySaturatesHigh(x_elem))
+        plt.plot(x,y)
+        plt.grid()
+        plt.xlabel("Drive")
+        plt.ylabel("Amplitude")
+        
+    elif ex=="8d":
         with open('logs/grid{}/simulation_{}.pickle'.format(grid_id,sim_id),'rb') as param_file:
             parameters = pickle.load(param_file)
-        timestep = data.timestep
-        n_iterations = np.shape(data.sensors.links.array)[0]
-        times = np.arange(
-            start=0,
-            stop = timestep*n_iterations,
-            step = timestep,)
-        timestep = times[1] - times[0]
-        amplitudes = parameters.nominal_amplitudes
-        phase_bias = parameters.phase_bias
-        osc_phases = data.state.phases()
-        osc_amplitudes = data.state.amplitudes()
-        links_positions = data.sensors.links.urdf_positions()
-        head_positions = links_positions[:, 0, :]
-        tail_positions = links_positions[:, 8, :]
-        joints_positions = data.sensors.joints.positions_all()
-        joints_velocities = data.sensors.joints.velocities_all()
-        joints_torques = data.sensors.joints.motor_torques_all()
-        #     # Notes:
-        #     # For the links arrays: positions[iteration, link_id, xyz]
-        #     # For the positions arrays: positions[iteration, xyz]
-        #     # For the joints arrays: positions[iteration, joint]
-        
-        #Might need to tweak this a bit
-        avg_speed = obtain_speed(times,head_positions)
-        results_speed[sim_id,:] = np.hstack((amplitudes[0,0], phase_bias[0,1], avg_speed))
-        
-        tot_energy=np.sum(np.asarray(joints_velocities)*np.asarray(joints_torques)*timestep)
-        
-        tot_energy =  np.sum([[joints_velocities[t,j] * joints_torques[t,j] * timestep
-                               for j in range(np.size(joints_velocities,1))]
-                              for t in range(np.size(joints_velocities,0))]
-                             )
-        
-        
-        
-        results_energy[sim_id,:] = np.hstack((amplitudes[0,0], phase_bias[0,1], tot_energy))
-    
-    plt.figure("Speed") 
-    plot_2d(results_speed,["Body amplitude","Phase lag (rad)", "Average speed"])
-    plt.figure("Energy")
-    plot_2d(results_energy,["Body amplitude","Phase lag (rad)", "Total energy"])
-    
-    #For interpretation: good to also know dependancy to drive ?
-    plt.figure("DriveAmplitude")
-    r_drive_body = lambda x: 0.065*x + 0.196
-    bodySaturatesLow = lambda x: x<1
-    bodySaturatesHigh = lambda x: x>5
-    x = np.linspace(0.8,6.2,100)
-    y = np.ones(100)
-    for i,x_elem in enumerate(x):
-        y[i] = r_drive_body(x_elem)*(not bodySaturatesLow(x_elem))*(not bodySaturatesHigh(x_elem))
-    plt.plot(x,y)
-    plt.grid()
-    plt.xlabel("Drive")
-    plt.ylabel("Amplitude")
+            
         
         
         

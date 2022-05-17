@@ -18,8 +18,9 @@ class SimulationParameters:
         
         self.drive_mlr = kwargs.get("drive_mlr",2) #default = 2
         self.exercise_8b = kwargs.get("exercise_8b",False)
-        self.turn = kwargs.get("turn",None)
-        self.drive_offset_turn = 1
+        self.turn = kwargs.get("turn","None")
+        self.drive_offset_turn = 0.5
+        self.backward = False
         
         self.nominal_amplitudes = kwargs.get("nominal_amplitudes",np.zeros(20))
         self.phase_bias = kwargs.get("phase_bias",np.zeros([20,20]))

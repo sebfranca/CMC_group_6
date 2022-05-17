@@ -9,7 +9,7 @@ from simulation_parameters import SimulationParameters
 
 def exercise_example(timestep):
     """Exercise example"""
-    drive=3.5
+    drive=2
     # Parameters
     parameter_set = [
         SimulationParameters(
@@ -34,7 +34,7 @@ def exercise_example(timestep):
         filename = './logs/example/simulation_{}.{}'
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
-            arena='water',  # Can also be 'ground', give it a try!
+            arena='ground',  # Can also be 'ground', give it a try!
             # fast=True,  # For fast mode (not real-time)
             # headless=True,  # For headless mode (No GUI, could be faster)
             # record=True,  # Record video

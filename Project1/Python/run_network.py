@@ -73,6 +73,9 @@ def run_network(duration, update=False, drive=0):
                     # phase_lag_body=None
                 )
             )
+            
+        if time0>5: 
+            print(time0)
         network.step(i, time0, timestep)
         phases_log[i+1, :] = network.state.phases(iteration=i+1)
         amplitudes_log[i+1, :] = network.state.amplitudes(iteration=i+1)
