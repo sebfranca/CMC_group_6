@@ -15,7 +15,7 @@ from network import SalamandraNetwork
 
 def exercise_8d1(timestep, duration=20):
     """Exercise 8d1"""
-    drive_params = {
+    turn_params = {
         "baseline": 3.5,
         "delta_turn": 0.5,
         "turn_start": 2,
@@ -24,16 +24,16 @@ def exercise_8d1(timestep, duration=20):
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
     
-    drive_mlr  = drive_params["baseline"]
-    drive_offset_turn = drive_params["delta_turn"]
+    drive_mlr  = turn_params["baseline"]
+    drive_offset_turn = turn_params["delta_turn"]
     
-    start     = drive_params["turn_start"]
-    turn_duration  = drive_params["turn_duration"]
+    start     = turn_params["turn_start"]
+    turn_duration  = turn_params["turn_duration"]
     
     turns = ["None" for i in range(n_iterations)]
     for i, t in enumerate(times):
         if t>=start and t<=start + turn_duration:
-            turns[i] = drive_params["direction"]
+            turns[i] = turn_params["direction"]
             
     #In order to turn, must give duration, timestep, drive_mlr, drive_offset_turn and turns.
             
@@ -67,7 +67,7 @@ def exercise_8d1(timestep, duration=20):
 #             spawn_position=[0, 0, 0.1],  # Robot position in [m]
 #             spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
 #             drive_mlr=drive_mlr[0],  # An example of parameter part of the grid search
-#             turn=drive_params["direction"],  # Another example
+#             turn=turn_params["direction"],  # Another example
 #             # ...
 #         )
 #         #for drive in np.linspace(3, 4, 2)
