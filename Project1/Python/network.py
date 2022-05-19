@@ -84,7 +84,7 @@ def motor_output(phases, amplitudes, iteration):
         if i<8:
             q[i] = r*(1+np.cos(phases[i])) - amplitudes[i+8]*(1+np.cos(phases[i+8]))
         elif i<12:
-            q[i] = phases[i+8] + np.pi/2
+            q[i] = 1*phases[i+8] - np.pi/2
     return q
 
 

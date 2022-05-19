@@ -7,11 +7,21 @@ from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
 
 
-def exercise_9a(timestep):
+def exercise_9a(timestep, duration = 50):
     """Exercise 9a"""
+    drive_mlr = 2.5
+    
+    sim_params = SimulationParameters(
+        duration = duration,
+        timestep = timestep,
+        
+        drive_mlr = drive_mlr
+        )
 
     # Use exercise_example.py for reference
-    pass
+    sim, data = simulation(
+        sim_parameters = sim_params,
+        arena = 'ground')
 
 
 if __name__ == '__main__':

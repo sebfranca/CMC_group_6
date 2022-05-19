@@ -40,8 +40,6 @@ def exercise_8d1(timestep, duration=20):
     sim_parameters = SimulationParameters(
         duration=duration,  # Simulation duration in [s]
         timestep=timestep,  # Simulation timestep in [s]
-        spawn_position=[0, 0, 0.1],  # Robot position in [m]
-        spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
         drive_mlr=drive_mlr,  # An example of parameter part of the grid search
         drive_offset_turn = drive_offset_turn,
         turns = turns
@@ -56,35 +54,6 @@ def exercise_8d1(timestep, duration=20):
                 # record=True,  # Record video
         )
     
-    
-   
-# =============================================================================
-# Debugging with GUI
-#     parameter_set = [
-#         SimulationParameters(
-#             duration=10,  # Simulation duration in [s]
-#             timestep=timestep,  # Simulation timestep in [s]
-#             spawn_position=[0, 0, 0.1],  # Robot position in [m]
-#             spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
-#             drive_mlr=drive_mlr[0],  # An example of parameter part of the grid search
-#             turn=turn_params["direction"],  # Another example
-#             # ...
-#         )
-#         #for drive in np.linspace(3, 4, 2)
-#         # for amplitudes in ...
-#         # for ...
-#     ]
-#     os.makedirs('./logs/example/', exist_ok=True)
-#     for simulation_i, sim_parameters in enumerate(parameter_set):
-#         filename = './logs/example/simulation_{}.{}'
-#         sim, data = simulation(
-#             sim_parameters=sim_parameters,  # Simulation parameters, see above
-#             arena='water',  # Can also be 'ground', give it a try!
-#             # fast=True,  # For fast mode (not real-time)
-#             # headless=True,  # For headless mode (No GUI, could be faster)
-#             # record=True,  # Record video
-#         )
-# =============================================================================
 
 def exercise_8d2(timestep, duration=20):
     """Exercise 8d2"""
@@ -95,8 +64,7 @@ def exercise_8d2(timestep, duration=20):
     sim_parameters = SimulationParameters(
         duration=duration,  # Simulation duration in [s]
         timestep=timestep,  # Simulation timestep in [s]
-        spawn_position=[0, 0, 0.1],  # Robot position in [m]
-        spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
+        
         drive_mlr=drive_mlr,  # An example of parameter part of the grid search
         backward = True
     )
@@ -111,4 +79,4 @@ def exercise_8d2(timestep, duration=20):
         )
 
 if __name__ == '__main__':
-    exercise_8d2(1e-2)
+    exercise_8d1(1e-2)
