@@ -31,9 +31,10 @@ class RobotParameters(dict):
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
         self.feedback_gains = np.zeros(self.n_oscillators)
         self.exercise_8b = False
+        self.exercise_8c = False
         self.backward = False
         
-        self.turn = None
+        self.turn_instruction = "None"
         self.drive_offset_turn = parameters.drive_offset_turn
 
         self.update(parameters)
@@ -41,9 +42,8 @@ class RobotParameters(dict):
     def update(self, parameters):
         """Update network from parameters"""
         self.exercise_8b = parameters.exercise_8b
-        self.turn = parameters.turn
+        self.exercise_8c = parameters.exercise_8c
         self.backward = parameters.backward
-        
         
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
@@ -70,10 +70,10 @@ class RobotParameters(dict):
         
         #Turning modifications
         
-        if self.turn == "right":
+        if self.turn_instruction == "right":
             self.d_r = d + self.drive_offset_turn
             self.d_l = d - self.drive_offset_turn
-        elif self.turn == "left":
+        elif self.turn_instruction == "left":
             self.d_r = d - self.drive_offset_turn
             self.d_l = d + self.drive_offset_turn
         else:
@@ -138,33 +138,58 @@ class RobotParameters(dict):
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
+        d = parameters.drive_mlr
+        nominal_amplitudes = np.zeros(20)
+        limbSaturatesLow = lambda x: x<1
+        limbSaturatesHigh = lambda x: x>3
+        bodySaturatesLow = lambda x: x<1
+        bodySaturatesHigh = lambda x: x>5
+        r_drive_body = lambda x: 0.065*x + 0.196
+        r_drive_limb = lambda x: 0.131*x + 0.131
+        
+        
         if self.exercise_8b:
             self.nominal_amplitudes = parameters.nominal_amplitudes
+        
+        elif self.exercise_8c:
+            self.nominal_amplitude_parameters = parameters.nominal_amplitude_parameters
+            Rhead = self.nominal_amplitude_parameters[0]
+            Rtail = self.nominal_amplitude_parameters[1]
             
+            adjusted_r_drive_body = np.linspace(Rhead, Rtail, 8)# lambda x: ((Rtail-Rhead)/7)*x+Rhead
+            adjusted_r_drive_body = np.append(np.linspace(Rhead, Rtail, 8), adjusted_r_drive_body)
+        
+        
+            for i in range(16):
+                if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
+                    if self.exercise_8c:
+                        nominal_amplitudes[i] = adjusted_r_drive_body[i]
+                    else:
+                        nominal_amplitudes[i] = r_drive_body(d)
+            for i in range(16,20):
+                if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
+                    nominal_amplitudes[i] = r_drive_limb(d)
+
+        
+            self.nominal_amplitudes = nominal_amplitudes
+        
         else:
-            d = parameters.drive_mlr
-            nominal_amplitudes = np.zeros(20)
             
             left =  [0,1,2,3,4,5,6,7,16,18]
             right = [8,9,10,11,12,13,14,15,17,19]
             
             #Turning modifications
-            if self.turn == "right":
+            if self.turn_instruction == "right":
                 self.d_r = d + self.drive_offset_turn
                 self.d_l = d - self.drive_offset_turn
-            elif self.turn == "left":
+            elif self.turn_instruction == "left":
                 self.d_r = d - self.drive_offset_turn
                 self.d_l = d + self.drive_offset_turn
             else:
                 self.d_r = d
                 self.d_l = d
                 
-            limbSaturatesLow = lambda x: x<1
-            limbSaturatesHigh = lambda x: x>3
-            bodySaturatesLow = lambda x: x<1
-            bodySaturatesHigh = lambda x: x>5
-            r_drive_body = lambda x: 0.065*x + 0.196
-            r_drive_limb = lambda x: 0.131*x + 0.131
+            
             
             
             for i in range(16):

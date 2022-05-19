@@ -12,15 +12,21 @@ class SimulationParameters:
         self.n_body_joints = 8
         self.n_legs_joints = 4
         self.duration = 30
+        self.timestep = 1e-2
+        self.times = np.arange(0,self.duration,self.timestep)
+        self.n_iterations = len(self.times)
         self.initial_phases = None
         self.phase_lag_body = None
         self.amplitude_gradient = None
         
-        self.drive_mlr = kwargs.get("drive_mlr",2) #default = 2
-        self.exercise_8b = kwargs.get("exercise_8b",False)
-        self.turn = kwargs.get("turn","None")
+        self.drive_mlr = 2
+        self.exercise_8b = False
+        self.exercise_8c = False
+        self.nominal_amplitude_parameters = np.zeros(2)
+        self.turns = ["None" for i in range(self.n_iterations)]
         self.drive_offset_turn = 0.5
         self.backward = False
+        
         
         self.nominal_amplitudes = kwargs.get("nominal_amplitudes",np.zeros(20))
         self.phase_bias = kwargs.get("phase_bias",np.zeros([20,20]))

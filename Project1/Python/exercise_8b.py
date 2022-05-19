@@ -9,21 +9,21 @@ from simulation_parameters import SimulationParameters
 
 def exercise_8b(timestep=1e-2, duration=20):
     """Exercise 8b"""
-    grid_id = 12 #to avoid overwriting, identify each grid w/ a number
+    grid_id = 13 #to avoid overwriting, identify each grid w/ a number
       
-    gridsize_phase = 10
-    gridsize_amp = 10
+    gridsize_phase = 4
+    gridsize_amp = 4
     
     phase_lag_params = {
-        'b2b_same' : np.linspace(np.pi/8,3*np.pi/8,gridsize_phase),
+        'b2b_same' : np.linspace(0,3*np.pi/8,gridsize_phase),
         'b2b_opp' : np.linspace(0,0,gridsize_phase),
-        'l2l_same' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,gridsize_phase),
-        'l2l_opp' : np.linspace(16/3*np.pi/8,48/3*np.pi/8,gridsize_phase),
+        'l2l_same' : np.linspace(16/3*0,48/3*np.pi/8,gridsize_phase),
+        'l2l_opp' : np.linspace(16/3*0,48/3*np.pi/8,gridsize_phase),
         'l2b' : np.linspace(0,0,gridsize_phase)
         }
     amplitude_params = {
-        'amplitude_limbs' : np.linspace(0,0.6,gridsize_amp),
-        'amplitude_body' : np.linspace(0,0.6,gridsize_amp)
+        'amplitude_limbs' : np.linspace(0.2,0.9,gridsize_amp),
+        'amplitude_body' : np.linspace(0.2,0.9,gridsize_amp)
         }
     
     
@@ -33,7 +33,6 @@ def exercise_8b(timestep=1e-2, duration=20):
     for i in range(len(phase_lag_params['l2b'])):
         phase_lag.append(make_matrix(phase_lag_params,i, couplingM=False))
         amplitudes.append(make_amplitudes(amplitude_params,i))
-      
     
     parameter_set = [SimulationParameters(
         duration=duration,  # Simulation duration in [s]
