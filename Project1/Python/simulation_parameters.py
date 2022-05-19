@@ -23,7 +23,11 @@ class SimulationParameters:
         self.exercise_8b = False
         self.exercise_8c = False
         self.nominal_amplitude_parameters = np.zeros(2)
+        
+        
+        self.timestep = 1e-2
         self.turns = ["None" for i in range(self.n_iterations)]
+        self.turn_instruction = self.turns[0]
         self.drive_offset_turn = 0.5
         self.backward = False
         

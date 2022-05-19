@@ -23,11 +23,21 @@ def network_ode(_time, state, robot_parameters, loads):
         Returns derivative of state (phases and amplitudes)
 
     """
+    iteration = round(_time/robot_parameters.timestep)  
+    if robot_parameters.turns[iteration] != "None":
+        instruction = robot_parameters.turns[iteration]
+        robot_parameters.perform_turn(instruction)
+    else:
+        if robot_parameters.isturning:
+            robot_parameters.end_turn()
+            
+    
+    
+    #Update to new iteration, only if necessary   
     n_oscillators = robot_parameters.n_oscillators
     phases = state[:n_oscillators]
     amplitudes = state[n_oscillators:2*n_oscillators]
-    omega = robot_parameters.coupling_weights
-    phi = robot_parameters.phase_bias
+    
     a = robot_parameters.rates
     R = robot_parameters.nominal_amplitudes
     # Implement equation here

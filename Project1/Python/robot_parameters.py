@@ -2,6 +2,7 @@
 
 import numpy as np
 from farms_core import pylog
+from simulation_parameters import SimulationParameters #used for turning
 
 
 class RobotParameters(dict):
@@ -32,10 +33,14 @@ class RobotParameters(dict):
         self.feedback_gains = np.zeros(self.n_oscillators)
         self.exercise_8b = False
         self.exercise_8c = False
-        self.backward = False
         
-        self.turn_instruction = "None"
+        
+        self.drive_mlr = parameters.drive_mlr
+        self.timestep = parameters.timestep
+        self.turns = parameters.turns
+        self.backward = False
         self.drive_offset_turn = parameters.drive_offset_turn
+        self.isturning = False
 
         self.update(parameters)
 
@@ -44,6 +49,7 @@ class RobotParameters(dict):
         self.exercise_8b = parameters.exercise_8b
         self.exercise_8c = parameters.exercise_8c
         self.backward = parameters.backward
+        self.drive_mlr = parameters.drive_mlr
         
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
@@ -51,6 +57,22 @@ class RobotParameters(dict):
         self.set_amplitudes_rate(parameters)  # a_i
         self.set_nominal_amplitudes(parameters)  # R_i
         self.set_feedback_gains(parameters)  # K_fb
+
+    def perform_turn(self,instruction):        
+        turn_parameters = SimulationParameters(
+            turn_instruction = instruction,
+            )
+        
+        self.set_frequencies(turn_parameters)
+        self.set_nominal_amplitudes(turn_parameters)
+        self.isturning = True
+        
+    def end_turn(self):
+        straight_parameters = SimulationParameters(
+            turn_instruction = "None")
+        self.set_frequencies(straight_parameters)
+        self.set_nominal_amplitudes(straight_parameters)
+        self.isturning = False
 
     def set_frequencies(self, parameters):
         """Set frequencies"""
@@ -63,19 +85,19 @@ class RobotParameters(dict):
         
         freqs = np.zeros(20)
         
-        d = parameters.drive_mlr
+        d = self.drive_mlr
         
         left =  [0,1,2,3,4,5,6,7,16,18]
         right = [8,9,10,11,12,13,14,15,17,19]
         
         #Turning modifications
         
-        if self.turn_instruction == "right":
-            self.d_r = d + self.drive_offset_turn
-            self.d_l = d - self.drive_offset_turn
-        elif self.turn_instruction == "left":
+        if parameters.turn_instruction == "right":
             self.d_r = d - self.drive_offset_turn
             self.d_l = d + self.drive_offset_turn
+        elif parameters.turn_instruction == "left":
+            self.d_r = d + self.drive_offset_turn
+            self.d_l = d - self.drive_offset_turn
         else:
             self.d_r = d
             self.d_l = d
@@ -138,7 +160,7 @@ class RobotParameters(dict):
 
     def set_nominal_amplitudes(self, parameters):
         """Set nominal amplitudes"""
-        d = parameters.drive_mlr
+        d = self.drive_mlr
         nominal_amplitudes = np.zeros(20)
         limbSaturatesLow = lambda x: x<1
         limbSaturatesHigh = lambda x: x>3
@@ -179,12 +201,12 @@ class RobotParameters(dict):
             right = [8,9,10,11,12,13,14,15,17,19]
             
             #Turning modifications
-            if self.turn_instruction == "right":
-                self.d_r = d + self.drive_offset_turn
-                self.d_l = d - self.drive_offset_turn
-            elif self.turn_instruction == "left":
+            if parameters.turn_instruction == "right":
                 self.d_r = d - self.drive_offset_turn
                 self.d_l = d + self.drive_offset_turn
+            elif parameters.turn_instruction == "left":
+                self.d_r = d + self.drive_offset_turn
+                self.d_l = d - self.drive_offset_turn
             else:
                 self.d_r = d
                 self.d_l = d

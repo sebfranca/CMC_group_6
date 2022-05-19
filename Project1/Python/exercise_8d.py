@@ -17,10 +17,10 @@ def exercise_8d1(timestep, duration=20):
     """Exercise 8d1"""
     drive_params = {
         "baseline": 3.5,
-        "delta_turn": 1,
+        "delta_turn": 0.5,
         "turn_start": 2,
-        "turn_duration": 5,
-        "direction": "right"}
+        "turn_duration": 10,
+        "direction": "left"}
     times = np.arange(0, duration, timestep)
     n_iterations = len(times)
     
@@ -28,11 +28,11 @@ def exercise_8d1(timestep, duration=20):
     drive_offset_turn = drive_params["delta_turn"]
     
     start     = drive_params["turn_start"]
-    duration  = drive_params["turn_duration"]
+    turn_duration  = drive_params["turn_duration"]
     
     turns = ["None" for i in range(n_iterations)]
     for i, t in enumerate(times):
-        if t>=start and t<=start + duration:
+        if t>=start and t<=start + turn_duration:
             turns[i] = drive_params["direction"]
             
     #In order to turn, must give duration, timestep, drive_mlr, drive_offset_turn and turns.
@@ -51,7 +51,7 @@ def exercise_8d1(timestep, duration=20):
     sim, data = simulation(
         sim_parameters=sim_parameters,  # Simulation parameters, see above
         arena='water',  # Can also be 'ground', give it a try!
-                # fast=True,  # For fast mode (not real-time)
+        #fast=True,  # For fast mode (not real-time)
         #headless=True,  # For headless mode (No GUI, could be faster)
                 # record=True,  # Record video
         )
@@ -86,10 +86,29 @@ def exercise_8d1(timestep, duration=20):
 #         )
 # =============================================================================
 
-def exercise_8d2(timestep):
+def exercise_8d2(timestep, duration=20):
     """Exercise 8d2"""
     # Use exercise_example.py for reference
-    pass
+    drive_mlr = 4
+    
+    
+    sim_parameters = SimulationParameters(
+        duration=duration,  # Simulation duration in [s]
+        timestep=timestep,  # Simulation timestep in [s]
+        spawn_position=[0, 0, 0.1],  # Robot position in [m]
+        spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
+        drive_mlr=drive_mlr,  # An example of parameter part of the grid search
+        backward = True
+    )
+    
+    filename = './logs/test8d'
+    sim, data = simulation(
+        sim_parameters=sim_parameters,  # Simulation parameters, see above
+        arena='water',  # Can also be 'ground', give it a try!
+        #fast=True,  # For fast mode (not real-time)
+        #headless=True,  # For headless mode (No GUI, could be faster)
+                # record=True,  # Record video
+        )
 
 if __name__ == '__main__':
-    exercise_8d1(1e-2)
+    exercise_8d2(1e-2)
