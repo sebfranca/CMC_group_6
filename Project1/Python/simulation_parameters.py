@@ -38,6 +38,12 @@ class SimulationParameters:
         self.nominal_amplitudes = np.zeros(20)
         self.phase_bias = np.zeros([20,20])
         
+        self.fb_gain = 2
+        
+        
+        self.cpg_active = True
+        self.fb_active = False
+        
         # Feel free to add more parameters (ex: MLR drive)
         # self.drive_mlr = ...
         # ...
@@ -52,5 +58,4 @@ class SimulationParameters:
         # Update object with provided keyword arguments
         # NOTE: This overrides the previous declarations
         self.__dict__.update(kwargs)
-        print(self.duration)
 

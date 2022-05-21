@@ -41,7 +41,10 @@ class RobotParameters(dict):
         self.backward = False
         self.drive_offset_turn = parameters.drive_offset_turn
         self.isturning = False
-
+        
+        self.cpg_active = parameters.cpg_active
+        self.fb_active  = parameters.fb_active
+        
         self.update(parameters)
 
     def update(self, parameters):
@@ -231,8 +234,8 @@ class RobotParameters(dict):
         #print(nominal_amplitudes[16:])
 
     def set_feedback_gains(self, parameters):
-        """Set feeback gains"""
-        pylog.warning('Convergence rates must be set')
+        """Set feeback gains"""        
+        self.feedback_gains = parameters.fb_gain * np.concatenate(([1]*8, [-1]*8, [1,-1]*2))
 
 
     def make_matrix(self, params, i=0, couplingM=True):

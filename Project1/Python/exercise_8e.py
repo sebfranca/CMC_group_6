@@ -7,11 +7,19 @@ from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
 
 
-def exercise_8e1(timestep):
+def exercise_8e1(timestep, duration = 10):
     """Exercise 8e1"""
-
-    # Use exercise_example.py for reference
-    pass
+    drive_mlr = 4
+    
+    sim_params = SimulationParameters(
+        drive_mlr = drive_mlr,
+        cpg_active = False,
+        fb_active = True,
+        duration = duration,
+        timestep = timestep
+        )
+    
+    sim, data = simulation(sim_params, arena='water')
 
 
 def exercise_8e2(timestep):

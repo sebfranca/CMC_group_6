@@ -50,10 +50,21 @@ def network_ode(_time, state, robot_parameters, loads):
     sin_matrix = np.sin(theta_j - theta_i - robot_parameters.phase_bias.T).T
     #must use the transpose of the transpose to have the correct result
     #then take the diagonal of the resulting matrix
-    thetadot = 2*np.pi*robot_parameters.freqs + np.diagonal(
-                    np.dot(
-                        amplitudes* robot_parameters.coupling_weights.T,
-                        sin_matrix))
+    thetadot = 2*np.pi*robot_parameters.freqs 
+    
+    if robot_parameters.cpg_active:
+        thetadot += np.diagonal(
+                        np.dot(
+                            amplitudes* robot_parameters.coupling_weights.T,
+                            sin_matrix))
+    if robot_parameters.fb_active:
+        loads = np.concatenate((
+            loads[0:8], loads[0:8],
+            loads[8:]
+            ))
+        
+        
+        thetadot += np.multiply(np.multiply(robot_parameters.feedback_gains, loads), np.cos(phases))
     
     rdot = a * (R-amplitudes)
         

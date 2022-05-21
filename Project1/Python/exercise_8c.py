@@ -5,14 +5,14 @@ import pickle
 import numpy as np
 from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
-
+from plot_results import main as makeplots
 
 def exercise_8c(timestep=1e-2, duration=20):
     """Exercise 8c"""
     nominal_amplitude_parameters = []
     grid_id = 100
     
-    param_range = np.linspace(0, 0.6, 6) #change here
+    param_range = np.linspace(0, 0.6,6) #change here
     for i in param_range:
         for j in param_range:
             nominal_amplitude_parameters.append([i,j])
@@ -43,9 +43,9 @@ def exercise_8c(timestep=1e-2, duration=20):
     
     
     
-    os.makedirs('./logs/grid{}/'.format(grid_id), exist_ok=True)
+    os.makedirs('./logs/ex_8c/grid{}/'.format(grid_id), exist_ok=True)
     for simulation_i, sim_parameters in enumerate(parameter_set):
-        filename = './logs/grid{}/simulation_{}.{}'
+        filename = './logs/ex_8c/grid{}/simulation_{}.{}'
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
@@ -61,7 +61,7 @@ def exercise_8c(timestep=1e-2, duration=20):
 
             pickle.dump(sim_parameters, param_file)
 
-
+    makeplots(plot=True, ex_id='8c', grid_id=grid_id)
 
 
 if __name__ == '__main__':

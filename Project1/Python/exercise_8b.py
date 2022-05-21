@@ -5,14 +5,14 @@ import pickle
 import numpy as np
 from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
-
+from plot_results import main as makeplots
 
 def exercise_8b(timestep=1e-2, duration=20):
     """Exercise 8b"""
     grid_id = 13 #to avoid overwriting, identify each grid w/ a number
       
-    gridsize_phase = 4
-    gridsize_amp = 4
+    gridsize_phase = 10
+    gridsize_amp = 10
     
     phase_lag_params = {
         'b2b_same' : np.linspace(0,3*np.pi/8,gridsize_phase),
@@ -49,9 +49,9 @@ def exercise_8b(timestep=1e-2, duration=20):
         ]
     
     
-    os.makedirs('./logs/grid{}/'.format(grid_id), exist_ok=True)
+    os.makedirs('./logs/ex_8b/grid{}/'.format(grid_id), exist_ok=True)
     for simulation_i, sim_parameters in enumerate(parameter_set):
-        filename = './logs/grid{}/simulation_{}.{}'
+        filename = './logs/ex_8b/grid{}/simulation_{}.{}'
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
@@ -64,7 +64,10 @@ def exercise_8b(timestep=1e-2, duration=20):
         # Log simulation parameters
         with open(filename.format(grid_id,simulation_i, 'pickle'), 'wb') as param_file:
             pickle.dump(sim_parameters, param_file)
-
+    
+    
+    makeplots(plot=True, ex_id = '8b', grid_id=grid_id)
+    
 
     
 def make_matrix(params,i, couplingM=False):
