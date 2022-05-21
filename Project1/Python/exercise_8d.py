@@ -93,5 +93,5 @@ def exercise_8d2(timestep, duration=20):
     makeplots(plot=True, ex_id='8d2')
 
 if __name__ == '__main__':
-    exercise_8d1(1e-2,5)
+    exercise_8d1(1e-2)
     exercise_8d2(1e-2)

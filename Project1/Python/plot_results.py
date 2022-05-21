@@ -20,13 +20,21 @@ def plot_positions(times, link_data):
     plt.grid(True)
 
 
-def plot_trajectory(link_data):
+def plot_trajectory(link_data, axs=None, subidx = 0, label = None):
     """Plot positions"""
-    plt.plot(link_data[:, 0], link_data[:, 1])
-    plt.xlabel('x [m]')
-    plt.ylabel('y [m]')
-    plt.axis('equal')
-    plt.grid(True)
+    if not isinstance(subidx,int):
+        plt.plot(link_data[:, 0], link_data[:, 1])
+        plt.xlabel('x [m]')
+        plt.ylabel('y [m]')
+        plt.axis('equal')
+        plt.grid(True)
+    else:
+        axs[subidx].plot(link_data[:, 0], link_data[:, 1], label = label)
+        axs[subidx].set_xlabel('x [m]')
+        axs[subidx].set_ylabel('y [m]')
+        axs[subidx].axis('equal')
+        axs[subidx].legend()
+        axs[subidx].grid(True)
 
 
 def plot_1d(results, labels):
@@ -200,18 +208,21 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         joints_velocities = data.sensors.joints.velocities_all()
         joints_torques = data.sensors.joints.motor_torques_all()
         
-        
-        plt.figure("ex_{}GPS".format(ex_id))
-        plot_trajectory(head_positions)
-        plot_trajectory(tail_positions)
-        plt.legend(labels = ["Head","Tail"])
-        plt.figure("ex_{}Spine angles".format(ex_id))
+        fig, axs = plt.subplots(2,1)
+        axs[1].scatter(0,0, c='k',label = "Initial position")
+        plot_trajectory(head_positions,axs=axs,subidx=1, label="Head trajectory")
+        plot_trajectory(tail_positions,axs=axs,subidx=1, label="Tail trajectory")
               
         for j in range(8):
-            plt.plot(times,np.asarray(joints_positions[:,j])-j, label = "Joint "+str(j))
-        plt.legend()
-        current_fig = plt.gca()
-        current_fig.axes.get_yaxis().set_ticks([])
+            axs[0].plot(times,np.asarray(joints_positions[:,j])-j, label = "Joint "+str(j))
+        #axs[1].legend(loc='best')
+        axs[0].set_xlabel("Time(s)")
+        axs[0].set_yticklabels([])
+        axs[0].set_ylabel("Joint positions")
+        plt.savefig("{}.png".format(ex_id))
+        plt.show()
+        
+        
         
         
         # for t in interesting_times:
@@ -224,5 +235,5 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
 
 
 if __name__ == '__main__':
-    main(plot=not save_plots(), ex_id = '8d2')
+    main(plot=not save_plots(), ex_id = '8d1')
 

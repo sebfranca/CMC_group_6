@@ -114,7 +114,7 @@ class SalamandraNetwork:
         # Replace your oscillator phases here
         self.state.set_phases(
             iteration=0,
-            value=1e-4*np.random.rand(self.robot_parameters.n_oscillators),
+            value=10*np.random.rand(self.robot_parameters.n_oscillators),
         )
         # Set solver
         self.solver = ode(f=network_ode)

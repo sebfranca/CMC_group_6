@@ -7,7 +7,7 @@ from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
 
 
-def exercise_8e1(timestep, duration = 10):
+def exercise_8e1(timestep, duration = 100):
     """Exercise 8e1"""
     drive_mlr = 4
     
@@ -15,6 +15,7 @@ def exercise_8e1(timestep, duration = 10):
         drive_mlr = drive_mlr,
         cpg_active = False,
         fb_active = True,
+        fb_gain = 2,
         duration = duration,
         timestep = timestep
         )

@@ -235,7 +235,7 @@ class RobotParameters(dict):
 
     def set_feedback_gains(self, parameters):
         """Set feeback gains"""        
-        self.feedback_gains = parameters.fb_gain * np.concatenate(([1]*8, [-1]*8, [1,-1]*2))
+        self.feedback_gains = parameters.fb_gain * np.concatenate(([-1]*8, [1]*8, [-1,1]*2))
 
 
     def make_matrix(self, params, i=0, couplingM=True):
