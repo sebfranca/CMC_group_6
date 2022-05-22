@@ -9,21 +9,44 @@ from plot_results import main as makeplots
 
 def exercise_8b(timestep=1e-2, duration=20):
     """Exercise 8b"""
-    grid_id = 13 #to avoid overwriting, identify each grid w/ a number
+    #to avoid overwriting, identify each grid w/ a number
+    #or with some text
+    grid_id = '_trying' 
       
-    gridsize_phase = 10
-    gridsize_amp = 10
+    gridsize_phase = 2
+    gridsize_amp = 2
+    
+    s_shape = 2*np.pi/8 #the body forms a full S-shape
+    nb_S_max = 1            #number of S-shapes desired
+    min_lag = 0.05*s_shape
+    max_lag = nb_S_max*s_shape
+    
+    min_amp = 0.8
+    max_amp = 0.8
+    
     
     phase_lag_params = {
-        'b2b_same' : np.linspace(0,3*np.pi/8,gridsize_phase),
-        'b2b_opp' : np.linspace(0,0,gridsize_phase),
-        'l2l_same' : np.linspace(16/3*0,48/3*np.pi/8,gridsize_phase),
-        'l2l_opp' : np.linspace(16/3*0,48/3*np.pi/8,gridsize_phase),
+        'b2b_same' : np.linspace(
+            min_lag,
+            max_lag,
+            gridsize_phase),
+        'b2b_opp' : np.linspace(
+            np.pi,
+            np.pi,
+            gridsize_phase),
+        'l2l_same' : np.linspace(
+            np.pi,
+            np.pi,
+            gridsize_phase),
+        'l2l_opp' : np.linspace(
+            np.pi,
+            np.pi,
+            gridsize_phase),
         'l2b' : np.linspace(0,0,gridsize_phase)
         }
     amplitude_params = {
-        'amplitude_limbs' : np.linspace(0.2,0.9,gridsize_amp),
-        'amplitude_body' : np.linspace(0.2,0.9,gridsize_amp)
+        'amplitude_limbs' : np.linspace(0,0,gridsize_amp),
+        'amplitude_body' : np.linspace(min_amp,max_amp,gridsize_amp)
         }
     
     
@@ -31,15 +54,13 @@ def exercise_8b(timestep=1e-2, duration=20):
     amplitudes = []
     
     for i in range(len(phase_lag_params['l2b'])):
-        phase_lag.append(make_matrix(phase_lag_params,i, couplingM=False))
+        phase_lag.append(make_matrix(params=phase_lag_params,i=i, couplingM=False))
         amplitudes.append(make_amplitudes(amplitude_params,i))
     
     parameter_set = [SimulationParameters(
         duration=duration,  # Simulation duration in [s]
         timestep=timestep,  # Simulation timestep in [s]
-        spawn_position=[0, 0, 0.1],  # Robot position in [m]
-        spawn_orientation=[0, 0, 0],  # Orientation in Euler angles [rad]
-        drive_mlr = 4,
+        drive_mlr = 4, #for frequencies
         nominal_amplitudes = nom_amp[0],
         phase_bias = lag,
         exercise_8b = True
@@ -48,15 +69,18 @@ def exercise_8b(timestep=1e-2, duration=20):
         for lag in phase_lag
         ]
     
-    
+    #Save results
     os.makedirs('./logs/ex_8b/grid{}/'.format(grid_id), exist_ok=True)
     for simulation_i, sim_parameters in enumerate(parameter_set):
         filename = './logs/ex_8b/grid{}/simulation_{}.{}'
+        print(parameter_set[simulation_i].nominal_amplitudes[0])
+        print(parameter_set[simulation_i].phase_bias[0,1]/s_shape)
+        
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
-            fast=True,  # For fast mode (not real-time)
-            headless=True,  # For headless mode (No GUI, could be faster)
+            #fast=True,  # For fast mode (not real-time)
+            #headless=True,  # For headless mode (No GUI, could be faster)
             # record=True,  # Record video
         )
         # Log robot data
@@ -70,9 +94,9 @@ def exercise_8b(timestep=1e-2, duration=20):
     
 
     
-def make_matrix(params,i, couplingM=False):
+def make_matrix(params, i=0, couplingM=True):
     """
-    Creates the phase bias matrix.
+    Creates the coupling or phase bias matrix.
     
     Parameters
     ----------------
@@ -83,23 +107,28 @@ def make_matrix(params,i, couplingM=False):
         
         _same : on the same side (left or right)
         _opp : opposite sides (left or right)
+        
+    *i:  gives the index in the grid
+    
+    *couplingM: True if making the coupling matrix,
+    False if making the phase bias matrix.
     """
+
     b2b_same = params['b2b_same'][i]
     b2b_opp = params['b2b_opp'][i]
     l2l_same = params['l2l_same'][i]
     l2l_opp = params['l2l_opp'][i]
     l2b = params['l2b'][i]
     
-    
-    matrix = np.zeros([20,20])
-    
+    #All conditions used in the matrix definition
+    #(used for clarity)
     isLimb = lambda j: j in [16,17,18,19]
-    isBody = lambda i: i in [i for i in range(16)]
+    isBody = lambda i: i in [k for k in range(16)]
         
     limbOnLeft = lambda i: i%2 ==0
     limbOnRight = lambda i: i%2==1
-    bodyOnLeft = lambda j: j in [i for i in range(8)]
-    bodyOnRight = lambda j: j in [i for i in range(8,16)]
+    bodyOnLeft = lambda j: j in [k for k in range(8)]
+    bodyOnRight = lambda j: j in [k for k in range(8,16)]
     
     limbOnSameSide = lambda i,j : (limbOnLeft(i) and limbOnLeft(j)) or (limbOnRight(i) and limbOnRight(j))
     limbOnOppSide = lambda i,j : (limbOnRight(i) and limbOnLeft(j)) or (limbOnLeft(i) and limbOnRight(j))
@@ -113,21 +142,23 @@ def make_matrix(params,i, couplingM=False):
     frontBodies = [0,1,2,3, 8,9,10,11]
     backBodies = [4,5,6,7, 12,13,14,15]
     
+    
+    matrix = np.zeros([20,20])
     for i in range(20):
         if isBody(i):
             j = i+1
             if bodyOnSameSide(i, j):
                 matrix[i,j] = b2b_same
                 
-                if couplingM: matrix[j,i] = b2b_same
-                else: matrix[j,i] = -b2b_same
+                if couplingM: matrix[j,i] =  b2b_same
+                else:         matrix[j,i] = -b2b_same
             
             j = i+8
             if bodyOnOppSide(i, j):
                 matrix[i,j] = b2b_opp
                 matrix[j,i] = b2b_opp
             
-        if isLimb(i):
+        elif isLimb(i):
             for j in range(i+1,i+4):
                 if j<20 and limbOnSameSide(i, j) and i in frontLimbs and j in backLimbs:
                     matrix[i,j] = l2l_same
@@ -139,8 +170,9 @@ def make_matrix(params,i, couplingM=False):
                 if (i in frontLimbs and j in frontBodies) or (i in backLimbs and j in backBodies):
                     if bodyLimbOnSameSide(j,i):
                         matrix[i,j] = l2b
-    
+                    
     return matrix
+
 
 def make_amplitudes(params,i):
     amp_limb = params['amplitude_limbs'][i]

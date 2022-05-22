@@ -101,11 +101,14 @@ def plot_2d(results, labels, n_data=300, log=False, cmap=None):
 def obtain_speed(times, link_data):
     """Returns the average velocity
     Velocity is calculated as tot_distance/tot_time
-    (z is not taken into account)"""
+    (z is not taken into account)
+    
+    We start from index 1000 (t=10s) to avoid accounting for transient
+    """
     x = link_data[:,0]
     y = link_data[:,1]
         
-    distance = np.sqrt((x[-1]-x[0])**2 + (y[-1]-y[0])**2)
+    distance = np.sqrt((x[-1]-x[1000])**2 + (y[-1]-y[1000])**2)
     t = times[-1] - times[0]
     return distance/t
 
@@ -123,6 +126,7 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         
         results_speed = np.zeros((max_iter+1,3))    
         results_energy = np.zeros((max_iter+1,3))
+        results_objective = np.zeros((max_iter+1,3))
         
         for sim_id in range(max_iter+1):    
             #Load data
@@ -158,25 +162,37 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
             avg_speed = obtain_speed(times,head_positions)
             
             if parameters.exercise_8b == True :
-                results_speed[sim_id,:] = np.hstack((amplitudes[0], phase_bias[0,1], avg_speed))
+                results_speed[sim_id,:] = np.hstack((amplitudes[0], phase_bias[0,1]/(2*np.pi/8), avg_speed))
             if parameters.exercise_8c == True:
                 results_speed[sim_id,:] = np.hstack((nominal_amplitude_parameters[0], nominal_amplitude_parameters[1], avg_speed))
             
-            tot_energy=np.sum(np.asarray(joints_velocities)*np.asarray(joints_torques)*timestep)
-    
+            #Total energy = Sum(velocity*torque*timestep)
+            # We start from index 1000 (t=10s) to remove transient
+            tot_energy=np.sum(np.abs(np.asarray(joints_velocities[1000:,:])*np.asarray(joints_torques[1000:,:])*timestep))
+            #objective: kinetic energy per unit mass / energy to move the joints
+            #do not calculate it if the solution is really bad
+            if avg_speed > 0.01 and tot_energy > 1:
+                objective = avg_speed**2 / tot_energy
+            else:
+                objective = 0
             
             if parameters.exercise_8b == True :
-                results_energy[sim_id,:] =  np.hstack((amplitudes[0], phase_bias[0,1], tot_energy))
-        
+                results_energy[sim_id,:] =  np.hstack((amplitudes[0], phase_bias[0,1]/(2*np.pi/8), tot_energy))
+                results_objective[sim_id,:] = np.hstack((amplitudes[0], phase_bias[0,1]/(2*np.pi/8), objective))
             if parameters.exercise_8c == True :
                 results_energy[sim_id,:] = np.hstack((nominal_amplitude_parameters[0], nominal_amplitude_parameters[1], tot_energy))
         
         
         if parameters.exercise_8b == True :
             plt.figure("Speed") 
-            plot_2d(results_speed,["Body amplitude","Phase lag (rad)", "Average speed"], n_data=round(np.sqrt(max_iter)))
+            plot_2d(results_speed,["Body amplitude [arbitrary units]","Phase lag [nb of S shapes]", "Average speed [m/s]"], n_data=round(np.sqrt(max_iter)))
+            plt.savefig("8b_speed.png")
             plt.figure("Energy")
-            plot_2d(results_energy,["Body amplitude","Phase lag (rad)", "Total energy"], n_data=round(np.sqrt(max_iter)))
+            plt.savefig("8b_energy.png")
+            plot_2d(results_energy,["Body amplitude [arbitrary units]","Phase lag [nb of S shapes]", "Total energy [J]"], n_data=round(np.sqrt(max_iter)))
+            plt.figure("Speed/energy")
+            plot_2d(results_objective,["Body amplitude [arbitrary units]","Phase lag [nb of S shapes]", "Speed^2/Energy [kg^-1]"], n_data=round(np.sqrt(max_iter)))
+            plt.savefig("8b_objective.png")
             
         if parameters.exercise_8c == True :
             plt.figure("Speed") 
@@ -225,15 +241,52 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         
         
         
-        # for t in interesting_times:
-        #     res_angles = np.array()
-        #     for joint in range(8):
-        #         res_angles = np.vstack((times[t],np.asarray(joints_positions)[t,joint])).T
-                
         
-    
+    elif ex_id in ['8e1','8e2']:
+        #Load data
+        data = SalamandraData.from_file('logs/ex_{}/simulation.{}'.format(ex_id,'h5'))
+        with open('logs/ex_{}/simulation.pickle'.format(ex_id),'rb') as param_file:
+            parameters = pickle.load(param_file)
+        timestep = data.timestep
+        n_iterations = np.shape(data.sensors.links.array)[0]
+        times = np.arange(
+            start=0,
+            stop = timestep*n_iterations,
+            step = timestep,)
+        timestep = times[1] - times[0]
+        
+        osc_phases = data.state.phases()
+        osc_amplitudes = data.state.amplitudes()
+        links_positions = data.sensors.links.urdf_positions()
+        head_positions = links_positions[:, 0, :]
+        tail_positions = links_positions[:, 8, :]
+        joints_positions = data.sensors.joints.positions_all()
+        joints_velocities = data.sensors.joints.velocities_all()
+        joints_torques = data.sensors.joints.motor_torques_all()
+        
+        fig, axs = plt.subplots(2,1)
+        axs[1].scatter(0,0, c='k',label = "Initial position")
+        plot_trajectory(head_positions,axs=axs,subidx=1, label="Head trajectory")
+              
+        for j in range(8):
+            axs[0].plot(times,np.cos(osc_phases[:,j])-3*j, label = "Joint "+str(j))
+        
+        axs[0].set_xlabel("Time(s)")
+        axs[0].set_yticklabels([])
+        axs[0].set_ylabel("Phase")
+        
+        avg_speed = obtain_speed(times,head_positions)
+        tot_energy=np.sum(np.abs(np.asarray(joints_velocities[1000:,:])*np.asarray(joints_torques[1000:,:])*timestep))
+        if avg_speed > 0.01 and tot_energy > 1:
+            objective = avg_speed**2 / tot_energy
+        else:
+            objective = 0
+            
+        print("Average speed : {} \nTotal energy: {} \nObjective function: {}".format(
+            avg_speed,tot_energy,objective))
+        
 
 
 if __name__ == '__main__':
-    main(plot=not save_plots(), ex_id = '8d1')
+    main(plot=not save_plots(), ex_id = '8e2', grid_id='_final2')
 

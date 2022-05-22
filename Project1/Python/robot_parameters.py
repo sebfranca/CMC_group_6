@@ -14,7 +14,7 @@ class RobotParameters(dict):
     def __init__(self, parameters):
         super(RobotParameters, self).__init__()
 
-        # Initialise parameters
+        # Default parameters needed for the network
         self.n_body_joints = parameters.n_body_joints
         self.n_legs_joints = parameters.n_legs_joints
         self.initial_phases = parameters.initial_phases
@@ -30,30 +30,45 @@ class RobotParameters(dict):
         self.phase_bias = np.zeros([self.n_oscillators, self.n_oscillators])
         self.rates = 20*np.ones(self.n_oscillators)
         self.nominal_amplitudes = np.zeros(self.n_oscillators)
-        self.feedback_gains = np.zeros(self.n_oscillators)
+        self.drive_mlr = 0
+        
+        #Parameters used to force the definition of matrices, instead
+        #of using the default values or the drive equation
         self.exercise_8b = False
         self.exercise_8c = False
-        
-        
-        self.drive_mlr = parameters.drive_mlr
-        self.timestep = parameters.timestep
-        self.turns = parameters.turns
+        self.exercise_8e = False
+        self.nominal_amplitude_parameters = np.zeros(2) #Rhead and Rtail
+                
+        #Parameters used for turning and backward motion
+        self.timestep = 0 #used in network.py::network_ode
         self.backward = False
-        self.drive_offset_turn = parameters.drive_offset_turn
+        self.drive_offset_turn = 0
         self.isturning = False
+        self.turns = ["None" for i in range(1)]
         
-        self.cpg_active = parameters.cpg_active
-        self.fb_active  = parameters.fb_active
+        #Parameters used to modulate CPG and feedback
+        self.cpg_active = True
+        self.fb_active  = False
+        self.feedback_gains = np.zeros(self.n_oscillators)
         
         self.update(parameters)
 
     def update(self, parameters):
         """Update network from parameters"""
+        #Directly from the parameters
         self.exercise_8b = parameters.exercise_8b
         self.exercise_8c = parameters.exercise_8c
+        self.exercise_8e = parameters.exercise_8e
         self.backward = parameters.backward
         self.drive_mlr = parameters.drive_mlr
+        self.timestep = parameters.timestep
+        self.turns = parameters.turns
+        self.drive_offset_turn = parameters.drive_offset_turn
+        self.cpg_active = parameters.cpg_active
+        self.fb_active = parameters.fb_active
+        self.nominal_amplitude_parameters = parameters.nominal_amplitude_parameters
         
+        #Based on some functions
         self.set_frequencies(parameters)  # f_i
         self.set_coupling_weights(parameters)  # w_ij
         self.set_phase_bias(parameters)  # phi_ij
@@ -61,7 +76,9 @@ class RobotParameters(dict):
         self.set_nominal_amplitudes(parameters)  # R_i
         self.set_feedback_gains(parameters)  # K_fb
 
-    def perform_turn(self,instruction):        
+    def perform_turn(self,instruction):    
+        """Update the frequencies and amplitudes during turning, 
+        by changing the drive."""
         turn_parameters = SimulationParameters(
             turn_instruction = instruction,
             )
@@ -71,6 +88,8 @@ class RobotParameters(dict):
         self.isturning = True
         
     def end_turn(self):
+        """Reset the frequencies and amplitudes in straight line,
+        by resetting the drive."""
         straight_parameters = SimulationParameters(
             turn_instruction = "None")
         self.set_frequencies(straight_parameters)
@@ -78,23 +97,28 @@ class RobotParameters(dict):
         self.isturning = False
 
     def set_frequencies(self, parameters):
-        """Set frequencies"""
+        """Set frequencies
+        --> left and right oscillators may receive a different drive,
+        if the salamandra must turn left or right.
+        Steps:
+            1. Define the saturation functions and f(drive) according to 
+            the paper
+            2. Update the drive if necessary, during turns
+            3. Update the frequencies
+        """
         limbSaturatesLow = lambda x: x<1
         limbSaturatesHigh = lambda x: x>3
         bodySaturatesLow = lambda x: x<1
         bodySaturatesHigh = lambda x: x>5
+        
         f_drive_body = lambda x: 0.2*x + 0.3
         f_drive_limb = lambda x: 0.2*x
-        
-        freqs = np.zeros(20)
-        
-        d = self.drive_mlr
         
         left =  [0,1,2,3,4,5,6,7,16,18]
         right = [8,9,10,11,12,13,14,15,17,19]
         
+        d = self.drive_mlr        
         #Turning modifications
-        
         if parameters.turn_instruction == "right":
             self.d_r = d - self.drive_offset_turn
             self.d_l = d + self.drive_offset_turn
@@ -105,7 +129,7 @@ class RobotParameters(dict):
             self.d_r = d
             self.d_l = d
         
-            
+        freqs = np.zeros(20)
         for i in range(16):
             if i in left and not bodySaturatesHigh(self.d_l) and not bodySaturatesLow(self.d_l):
                     freqs[i] = f_drive_body(self.d_l)
@@ -117,20 +141,26 @@ class RobotParameters(dict):
             elif i in right and not limbSaturatesHigh(self.d_r) and not limbSaturatesLow(self.d_r):
                     freqs[i] = f_drive_limb(self.d_r)
                    
-            
-            
         self.freqs = freqs
-        #print(freqs[16:])
 
     def set_coupling_weights(self, parameters):
         """Set coupling weights"""
-        coupling_params = {
-            'b2b_same' : [10],
-            'b2b_opp' : [10],
-            'l2l_same' : [10],
-            'l2l_opp' : [10],
-            'l2b' : [30]
-            }        
+        if self.exercise_8e:
+            coupling_params = {
+                'b2b_same' : [0],
+                'b2b_opp' : [10],
+                'l2l_same' : [10],
+                'l2l_opp' : [10],
+                'l2b' : [30]
+                }        
+        else:
+            coupling_params = {
+                'b2b_same' : [10],
+                'b2b_opp' : [10],
+                'l2l_same' : [10],
+                'l2l_opp' : [10],
+                'l2b' : [30]
+                }        
         self.coupling_weights = self.make_matrix(coupling_params)
         
     def set_phase_bias(self, parameters):
@@ -139,6 +169,8 @@ class RobotParameters(dict):
             self.phase_bias = parameters.phase_bias
         else:
             if self.backward:
+                #if going backward, invert the direction of coupling
+                #by putting a minus sign in b2b_same
                 phase_lag_params = {
                 'b2b_same' : [-2*np.pi/8],
                 'b2b_opp' : [np.pi],
@@ -162,47 +194,50 @@ class RobotParameters(dict):
         self.rates = 20*np.ones(self.n_oscillators)
 
     def set_nominal_amplitudes(self, parameters):
-        """Set nominal amplitudes"""
-        d = self.drive_mlr
-        nominal_amplitudes = np.zeros(20)
+        """Set nominal amplitudes
+        --> left and right oscillators may receive a different drive,
+        if the salamandra must turn left or right.
+        Steps:
+            1. Define the saturation functions and f(drive) according to 
+            the paper
+            2. Update the drive if necessary, during turns
+            3. Update the amplitudes
+            
+        In 8b and 8c, this algorithm is bypassed."""
         limbSaturatesLow = lambda x: x<1
         limbSaturatesHigh = lambda x: x>3
         bodySaturatesLow = lambda x: x<1
-        bodySaturatesHigh = lambda x: x>5
+        bodySaturatesHigh = lambda x: x>5.
+        
         r_drive_body = lambda x: 0.065*x + 0.196
         r_drive_limb = lambda x: 0.131*x + 0.131
         
+        left =  [0,1,2,3,4,5,6,7,16,18]
+        right = [8,9,10,11,12,13,14,15,17,19]
         
+        d = self.drive_mlr
+        
+        nominal_amplitudes = np.zeros(20)
         if self.exercise_8b:
             self.nominal_amplitudes = parameters.nominal_amplitudes
         
         elif self.exercise_8c:
-            self.nominal_amplitude_parameters = parameters.nominal_amplitude_parameters
             Rhead = self.nominal_amplitude_parameters[0]
             Rtail = self.nominal_amplitude_parameters[1]
             
-            adjusted_r_drive_body = np.linspace(Rhead, Rtail, 8)# lambda x: ((Rtail-Rhead)/7)*x+Rhead
-            adjusted_r_drive_body = np.append(np.linspace(Rhead, Rtail, 8), adjusted_r_drive_body)
-        
+            adjusted_r_drive_body = np.linspace(Rhead, Rtail, 8)
+            adjusted_r_drive_body = np.append(adjusted_r_drive_body, adjusted_r_drive_body)
         
             for i in range(16):
                 if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
-                    if self.exercise_8c:
-                        nominal_amplitudes[i] = adjusted_r_drive_body[i]
-                    else:
-                        nominal_amplitudes[i] = r_drive_body(d)
+                    nominal_amplitudes[i] = adjusted_r_drive_body[i]
             for i in range(16,20):
                 if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
                     nominal_amplitudes[i] = r_drive_limb(d)
 
-        
             self.nominal_amplitudes = nominal_amplitudes
         
         else:
-            
-            left =  [0,1,2,3,4,5,6,7,16,18]
-            right = [8,9,10,11,12,13,14,15,17,19]
-            
             #Turning modifications
             if parameters.turn_instruction == "right":
                 self.d_r = d - self.drive_offset_turn
@@ -214,9 +249,6 @@ class RobotParameters(dict):
                 self.d_r = d
                 self.d_l = d
                 
-            
-            
-            
             for i in range(16):
                 if i in left and not bodySaturatesHigh(self.d_l) and not bodySaturatesLow(self.d_l):
                         nominal_amplitudes[i] = r_drive_body(self.d_l)
@@ -228,10 +260,7 @@ class RobotParameters(dict):
                 elif i in right and not limbSaturatesHigh(self.d_r) and not limbSaturatesLow(self.d_r):
                         nominal_amplitudes[i] = r_drive_limb(self.d_r)
             
-            
-        
             self.nominal_amplitudes = nominal_amplitudes
-        #print(nominal_amplitudes[16:])
 
     def set_feedback_gains(self, parameters):
         """Set feeback gains"""        
@@ -251,6 +280,12 @@ class RobotParameters(dict):
             
             _same : on the same side (left or right)
             _opp : opposite sides (left or right)
+            
+        *i: not used here (always =0), but used in exercise_8b.py
+        It gives the index in the grid
+        
+        *couplingM: True if making the coupling matrix,
+        False if making the phase bias matrix.
         """
 
         b2b_same = params['b2b_same'][i]
@@ -259,15 +294,15 @@ class RobotParameters(dict):
         l2l_opp = params['l2l_opp'][i]
         l2b = params['l2b'][i]
         
-        matrix = np.zeros([20,20])
-        
+        #All conditions used in the matrix definition
+        #(used for clarity)
         isLimb = lambda j: j in [16,17,18,19]
-        isBody = lambda i: i in [i for i in range(16)]
+        isBody = lambda i: i in [k for k in range(16)]
             
         limbOnLeft = lambda i: i%2 ==0
         limbOnRight = lambda i: i%2==1
-        bodyOnLeft = lambda j: j in [i for i in range(8)]
-        bodyOnRight = lambda j: j in [i for i in range(8,16)]
+        bodyOnLeft = lambda j: j in [k for k in range(8)]
+        bodyOnRight = lambda j: j in [k for k in range(8,16)]
         
         limbOnSameSide = lambda i,j : (limbOnLeft(i) and limbOnLeft(j)) or (limbOnRight(i) and limbOnRight(j))
         limbOnOppSide = lambda i,j : (limbOnRight(i) and limbOnLeft(j)) or (limbOnLeft(i) and limbOnRight(j))
@@ -281,21 +316,23 @@ class RobotParameters(dict):
         frontBodies = [0,1,2,3, 8,9,10,11]
         backBodies = [4,5,6,7, 12,13,14,15]
         
+        
+        matrix = np.zeros([20,20])
         for i in range(20):
             if isBody(i):
                 j = i+1
                 if bodyOnSameSide(i, j):
                     matrix[i,j] = b2b_same
                     
-                    if couplingM: matrix[j,i] = b2b_same
-                    else: matrix[j,i] = -b2b_same
+                    if couplingM: matrix[j,i] =  b2b_same
+                    else:         matrix[j,i] = -b2b_same
                 
                 j = i+8
                 if bodyOnOppSide(i, j):
                     matrix[i,j] = b2b_opp
                     matrix[j,i] = b2b_opp
                 
-            if isLimb(i):
+            elif isLimb(i):
                 for j in range(i+1,i+4):
                     if j<20 and limbOnSameSide(i, j) and i in frontLimbs and j in backLimbs:
                         matrix[i,j] = l2l_same
@@ -308,31 +345,4 @@ class RobotParameters(dict):
                         if bodyLimbOnSameSide(j,i):
                             matrix[i,j] = l2b
                         
-        
-        
-        # for i in range(20):
-        #     for j in range(20):
-        #         if i==j: pass
-                
-        #         elif isBody(i) and isBody(j):
-        #             if bodyOnSameSide(i, j) and j==i+1:
-        #                 matrix[i,j] = b2b_same
-        #                 if couplingM:
-        #                     matrix[j,i] = b2b_same
-        #                 else:
-        #                     matrix[j,i] = - b2b_same
-        #             elif bodyOnOppSide(i, j) and abs(i-j)==8:
-        #                 matrix[i,j] = b2b_opp
-                        
-        #         elif isLimb(i) and isLimb(j):
-        #             if limbOnSameSide(i, j):
-        #                 matrix[i,j] = l2l_same
-        #             elif limbOnOppSide(i, j) and (abs(i-j)==2 or (abs(i-j)==1 and not(i==17 and j==18) and not(i==18 and j==17))):
-        #                 matrix[i,j] = l2l_opp
-                
-        #         elif isBody(i) and isLimb(j):
-        #             if bodyLimbOnSameSide(i, j):
-        #                 if (j in frontLimbs and i in frontBodies) or (j in backLimbs and i in backBodies):
-        #                     matrix[j,i] = l2b
-
         return matrix

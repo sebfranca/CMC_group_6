@@ -23,6 +23,11 @@ def network_ode(_time, state, robot_parameters, loads):
         Returns derivative of state (phases and amplitudes)
 
     """
+    # Implementation of turning:
+        #get the iteration and the current turn instruction
+        #update robot_parameters (freqs + amplitudes) accordingly:
+            #turn if needed --> change the drive
+            #end turn if needed --> reset the drive
     iteration = round(_time/robot_parameters.timestep)  
     if robot_parameters.turns[iteration] != "None":
         instruction = robot_parameters.turns[iteration]
@@ -32,39 +37,43 @@ def network_ode(_time, state, robot_parameters, loads):
             robot_parameters.end_turn()
             
     
-    
-    #Update to new iteration, only if necessary   
+    #get the states and parameters
     n_oscillators = robot_parameters.n_oscillators
     phases = state[:n_oscillators]
     amplitudes = state[n_oscillators:2*n_oscillators]
     
     a = robot_parameters.rates
     R = robot_parameters.nominal_amplitudes
-    # Implement equation here
-    
-    #make a square matrix with phases and transpose it
-    theta_i = np.resize(np.repeat(phases,n_oscillators),[n_oscillators,n_oscillators]) 
-    theta_j = theta_i.T
     
     
-    sin_matrix = np.sin(theta_j - theta_i - robot_parameters.phase_bias.T).T
-    #must use the transpose of the transpose to have the correct result
-    #then take the diagonal of the resulting matrix
     thetadot = 2*np.pi*robot_parameters.freqs 
     
+    #CPG implementation
     if robot_parameters.cpg_active:
+        #avoid double loop --> about 5x faster!
+        #first, make a square matrix with phases
+        theta_i = np.resize(np.repeat(phases,n_oscillators),[n_oscillators,n_oscillators]) 
+        theta_j = theta_i.T
+        
+        sin_matrix = np.sin(theta_j - theta_i - robot_parameters.phase_bias.T).T
+        #Implementation of eq. (3) without loops
+        #result is correct only if we transpose again then we take the diagonal
         thetadot += np.diagonal(
                         np.dot(
                             amplitudes* robot_parameters.coupling_weights.T,
                             sin_matrix))
+        
+    #Sensory feedback implementation
     if robot_parameters.fb_active:
+        #12 bodies but 20 oscillators --> loads must be reshaped
         loads = np.concatenate((
             loads[0:8], loads[0:8],
             loads[8:]
             ))
         
-        
         thetadot += np.multiply(np.multiply(robot_parameters.feedback_gains, loads), np.cos(phases))
+    
+    
     
     rdot = a * (R-amplitudes)
         
@@ -87,7 +96,6 @@ def motor_output(phases, amplitudes, iteration):
         Motor outputs for joint in the system.
 
     """
-    # Implement equation here
     q = np.zeros_like(phases)[:12] + np.zeros_like(amplitudes)[:12]
     
     
@@ -95,6 +103,7 @@ def motor_output(phases, amplitudes, iteration):
         if i<8:
             q[i] = r*(1+np.cos(phases[i])) - amplitudes[i+8]*(1+np.cos(phases[i+8]))
         elif i<12:
+            #/!\ 20 phases but only 12 bodies --> i+8
             q[i] = 1*phases[i+8] - np.pi/2
     return q
 
@@ -111,10 +120,11 @@ class SalamandraNetwork:
         # Parameters
         self.robot_parameters = RobotParameters(sim_parameters)
         # Set initial state
-        # Replace your oscillator phases here
+        # We put large initial values, otherwise feedback does not work well
+        #(loads was always equal to 0)
         self.state.set_phases(
             iteration=0,
-            value=10*np.random.rand(self.robot_parameters.n_oscillators),
+            value=1e-3*np.random.rand(self.robot_parameters.n_oscillators),
         )
         # Set solver
         self.solver = ode(f=network_ode)

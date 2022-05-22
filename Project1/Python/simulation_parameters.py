@@ -20,33 +20,27 @@ class SimulationParameters:
         self.amplitude_gradient = None
         self.spawn_position=[0, 0, 0.1]  # Robot position in [m]
         self.spawn_orientation=[0, 0, 0]  # Orientation in Euler angles [rad]
-        
-        
         self.drive_mlr = 2
+        
+        #Parameters used to force the definition of matrices, 
+        #in robot_parameters.py
         self.exercise_8b = False
         self.exercise_8c = False
+        self.exercise_8e = False
         self.nominal_amplitude_parameters = np.zeros(2)
-        
-        
-        
-        self.turns = ["None" for i in range(self.n_iterations)]
-        self.turn_instruction = self.turns[0]
-        self.drive_offset_turn = 0.5
-        self.backward = False
-        
-        
         self.nominal_amplitudes = np.zeros(20)
         self.phase_bias = np.zeros([20,20])
         
+        #Parameters used for turning and going backward
+        self.turns = ["None" for i in range(self.n_iterations)] #all turn instructions
+        self.turn_instruction = self.turns[0] #turn instruction of current iteration
+        self.drive_offset_turn = 0.5
+        self.backward = False
+        
+        #Parameters used to adjust CPG vs sensory feedback
         self.fb_gain = 2
-        
-        
         self.cpg_active = True
         self.fb_active = False
-        
-        # Feel free to add more parameters (ex: MLR drive)
-        # self.drive_mlr = ...
-        # ...
 
         # Disruptions
         self.set_seed = False
