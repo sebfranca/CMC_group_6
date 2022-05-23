@@ -26,7 +26,8 @@ class SimulationParameters:
         #in robot_parameters.py
         self.exercise_8b = False
         self.exercise_8c = False
-        self.exercise_8e = False
+        self.decoupled = False
+        self.exercise_8f = False
         self.nominal_amplitude_parameters = np.zeros(2)
         self.nominal_amplitudes = np.zeros(20)
         self.phase_bias = np.zeros([20,20])
@@ -39,6 +40,7 @@ class SimulationParameters:
         
         #Parameters used to adjust CPG vs sensory feedback
         self.fb_gain = 2
+        self.b2b_same_coupling = 10
         self.cpg_active = True
         self.fb_active = False
 

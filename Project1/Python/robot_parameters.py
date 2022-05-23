@@ -36,7 +36,8 @@ class RobotParameters(dict):
         #of using the default values or the drive equation
         self.exercise_8b = False
         self.exercise_8c = False
-        self.exercise_8e = False
+        self.decoupled = False
+        self.exercise_8f = False
         self.nominal_amplitude_parameters = np.zeros(2) #Rhead and Rtail
                 
         #Parameters used for turning and backward motion
@@ -58,7 +59,8 @@ class RobotParameters(dict):
         #Directly from the parameters
         self.exercise_8b = parameters.exercise_8b
         self.exercise_8c = parameters.exercise_8c
-        self.exercise_8e = parameters.exercise_8e
+        self.decoupled = parameters.decoupled
+        self.exercise_8f = parameters.exercise_8f
         self.backward = parameters.backward
         self.drive_mlr = parameters.drive_mlr
         self.timestep = parameters.timestep
@@ -145,7 +147,7 @@ class RobotParameters(dict):
 
     def set_coupling_weights(self, parameters):
         """Set coupling weights"""
-        if self.exercise_8e:
+        if self.decoupled:
             coupling_params = {
                 'b2b_same' : [0],
                 'b2b_opp' : [10],
@@ -153,6 +155,14 @@ class RobotParameters(dict):
                 'l2l_opp' : [10],
                 'l2b' : [30]
                 }        
+        elif self.exercise_8f:
+            coupling_params = {
+                'b2b_same' : [parameters.b2b_same_coupling],
+                'b2b_opp' : [10],
+                'l2l_same' : [10],
+                'l2l_opp' : [10],
+                'l2b' : [30]
+                }    
         else:
             coupling_params = {
                 'b2b_same' : [10],

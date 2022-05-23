@@ -7,13 +7,13 @@ from salamandra_simulation.simulation import simulation
 from simulation_parameters import SimulationParameters
 from plot_results import main as makeplots
 
-def exercise_8e1(timestep, duration = 40):
+def exercise_8e1(timestep, duration = 25):
     """Exercise 8e1"""
     drive_mlr = 4
    
     sim_params = SimulationParameters(
        drive_mlr = drive_mlr,
-       exercise_8e = True,
+       decoupled = True,
        duration = duration,
        timestep = timestep
        )
@@ -30,7 +30,7 @@ def exercise_8e1(timestep, duration = 40):
     makeplots(plot=True, ex_id='8e1')
     
 
-def exercise_8e2(timestep, duration = 40):
+def exercise_8e2(timestep, duration = 25):
     """Exercise 8e2"""
 
     # Use exercise_example.py for reference
@@ -38,14 +38,17 @@ def exercise_8e2(timestep, duration = 40):
    
     sim_params = SimulationParameters(
        drive_mlr = drive_mlr,
-       exercise_8e = True,
+       decoupled = True,
        fb_active = True,
        fb_gain = 0.8,
        duration = duration,
-       timestep = timestep
+       timestep = timestep,
+       
+       set_seed = True,
+       randseed = 0
        )
    
-    sim, data = simulation(sim_params, arena='water', fast=True, headless=True)
+    sim, data = simulation(sim_params, arena='water')
 
     os.makedirs('./logs/ex_8e2/', exist_ok=True)
     filename = './logs/ex_8e2/simulation.{}'
@@ -56,6 +59,6 @@ def exercise_8e2(timestep, duration = 40):
     makeplots(plot=True, ex_id='8e2')
 
 if __name__ == '__main__':
-    exercise_8e1(timestep=1e-2)
+    #exercise_8e1(timestep=1e-2)
     exercise_8e2(timestep=1e-2)
 

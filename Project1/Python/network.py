@@ -120,8 +120,8 @@ class SalamandraNetwork:
         # Parameters
         self.robot_parameters = RobotParameters(sim_parameters)
         # Set initial state
-        # We put large initial values, otherwise feedback does not work well
-        #(loads was always equal to 0)
+        if sim_parameters.set_seed:
+            np.random.seed(sim_parameters.randseed)
         self.state.set_phases(
             iteration=0,
             value=1e-3*np.random.rand(self.robot_parameters.n_oscillators),

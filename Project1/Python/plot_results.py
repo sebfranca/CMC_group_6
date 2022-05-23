@@ -9,6 +9,7 @@ from salamandra_simulation.data import SalamandraData
 from salamandra_simulation.parse_args import save_plots
 from salamandra_simulation.save_figures import save_figures
 from os.path import isfile
+import matplotlib.patches as patches
 
 def plot_positions(times, link_data):
     """Plot positions"""
@@ -115,7 +116,7 @@ def obtain_speed(times, link_data):
 
 def main(plot=True, ex_id = '8b', grid_id = 0):
     """Main"""
-    if ex_id == '8b' or ex_id == '8c':
+    if ex_id in ['8b','8c','8f']:
         exists=True
         max_iter = 0
         while exists:
@@ -145,6 +146,9 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
                 phase_bias = parameters.phase_bias
             if parameters.exercise_8c == True :
                 nominal_amplitude_parameters = parameters.nominal_amplitude_parameters
+            if parameters.exercise_8f:
+                fb_gain = parameters.fb_gain
+                coupling = parameters.b2b_same_coupling
             osc_phases = data.state.phases()
             osc_amplitudes = data.state.amplitudes()
             links_positions = data.sensors.links.urdf_positions()
@@ -165,6 +169,8 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
                 results_speed[sim_id,:] = np.hstack((amplitudes[0], phase_bias[0,1]/(2*np.pi/8), avg_speed))
             if parameters.exercise_8c == True:
                 results_speed[sim_id,:] = np.hstack((nominal_amplitude_parameters[0], nominal_amplitude_parameters[1], avg_speed))
+            if parameters.exercise_8f:
+                results_speed[sim_id,:] = np.hstack((fb_gain, coupling, avg_speed))
             
             #Total energy = Sum(velocity*torque*timestep)
             # We start from index 1000 (t=10s) to remove transient
@@ -181,7 +187,9 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
                 results_objective[sim_id,:] = np.hstack((amplitudes[0], phase_bias[0,1]/(2*np.pi/8), objective))
             if parameters.exercise_8c == True :
                 results_energy[sim_id,:] = np.hstack((nominal_amplitude_parameters[0], nominal_amplitude_parameters[1], tot_energy))
-        
+            if parameters.exercise_8f:
+                results_energy[sim_id,:] =  np.hstack((fb_gain, coupling, tot_energy))
+                results_objective[sim_id,:] = np.hstack((fb_gain, coupling, objective))
         
         if parameters.exercise_8b == True :
             plt.figure("Speed") 
@@ -199,8 +207,17 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
             plot_2d(results_speed,["R_head","R_tail", "Speed"], n_data=round(np.sqrt(max_iter)))
             plt.figure("Energy")
             plot_2d(results_energy,["R_head","R_tail", "Total energy"], n_data=round(np.sqrt(max_iter)))
-    
-    
+        
+        if parameters.exercise_8f:
+            plt.figure("Speed") 
+            plot_2d(results_speed,["Feedback gain [arbitrary units]","Intersegmental coupling [arbitrary units]", "Average speed [m/s]"], n_data=round(np.sqrt(max_iter)))
+            plt.savefig("8f_speed.png")
+            plt.figure("Energy")
+            plt.savefig("8f_energy.png")
+            plot_2d(results_energy,["Feedback gain [arbitrary units]","Intersegmental coupling [arbitrary units]", "Total energy [J]"], n_data=round(np.sqrt(max_iter)))
+            plt.figure("Speed/energy")
+            plot_2d(results_objective,["Feedback gain [arbitrary units]","Intersegmental coupling [arbitrary units]", "Speed^2/Energy [kg^-1]"], n_data=round(np.sqrt(max_iter)))
+            plt.savefig("8f_objective.png")
     
     elif ex_id in ['8d1','8d2']:
         #Load data
@@ -264,6 +281,26 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         joints_velocities = data.sensors.joints.velocities_all()
         joints_torques = data.sensors.joints.motor_torques_all()
         
+        # fig = plt.figure()
+        # axes1 = fig.add_axes([0.1,0.1,0.9,0.9])
+        # axes2 = fig.add_axes([0.2,0.6,0.4,0.3])
+        
+        # axes2.scatter(0,0,c='k',label="Initial position")
+        # axes2.plot(head_positions[:, 0], head_positions[:, 1], label = "Head trajectory")
+        # axes2.set_xlabel('x [m]')
+        # axes2.set_ylabel('y [m]')
+        # axes2.axis('equal')
+        # axes2.legend()
+        # axes2.grid(True)
+        
+        # for j in range(8):
+        #     axes1.plot(times, np.cos(osc_phases[:,j])-3*j, label = "Joint" + str(j))
+        # rect = patches.Rectangle((-1,-12), 23, 13, linewidth=1, alpha=1, zorder=10, edgecolor='white', facecolor='w')
+        # axes1.add_patch(rect)
+        # axes1.set_xlabel("Time [s]")
+        # axes1.set_ylabel("Phase")
+        # axes1.set_yticklabels([])
+        # axes1.legend(loc='upper right')
         fig, axs = plt.subplots(2,1)
         axs[1].scatter(0,0, c='k',label = "Initial position")
         plot_trajectory(head_positions,axs=axs,subidx=1, label="Head trajectory")
