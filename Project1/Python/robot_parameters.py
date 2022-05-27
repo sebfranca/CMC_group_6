@@ -52,6 +52,16 @@ class RobotParameters(dict):
         self.fb_active  = False
         self.feedback_gains = np.zeros(self.n_oscillators)
         
+        #Disruption parameters
+        self.n_disruption_couplings = 0
+        self.n_disruption_oscillators = 0
+        self.n_disruption_sensors = 0
+        self.couplings_remaining = [i for i in range(15) if i!=7]
+        self.oscillators_remaining = [i for i in range(16)]
+        self.disrupted_oscillators = []
+        self.sensors_remaining = [i for i in range(16)]
+        self.disrupted_sensors = []
+        
         self.update(parameters)
 
     def update(self, parameters):
@@ -69,6 +79,9 @@ class RobotParameters(dict):
         self.cpg_active = parameters.cpg_active
         self.fb_active = parameters.fb_active
         self.nominal_amplitude_parameters = parameters.nominal_amplitude_parameters
+        self.n_disruption_couplings = parameters.n_disruption_couplings
+        self.n_disruption_oscillators = parameters.n_disruption_oscillators
+        self.n_disruption_sensors = parameters.n_disruption_sensors
         
         #Based on some functions
         self.set_frequencies(parameters)  # f_i
@@ -77,6 +90,19 @@ class RobotParameters(dict):
         self.set_amplitudes_rate(parameters)  # a_i
         self.set_nominal_amplitudes(parameters)  # R_i
         self.set_feedback_gains(parameters)  # K_fb
+        
+        #apply disruptions
+        while self.n_disruption_couplings >0:
+            self.disrupt_couplings()
+            self.n_disruption_couplings -= 1
+            
+        while self.n_disruption_oscillators>0:
+            self.disrupt_oscillators()
+            self.n_disruption_oscillators -= 1
+            
+        while self.n_disruption_sensors >0:
+            self.disrupt_sensors()
+            self.n_disruption_sensors -= 1
 
     def perform_turn(self,instruction):    
         """Update the frequencies and amplitudes during turning, 
@@ -97,6 +123,23 @@ class RobotParameters(dict):
         self.set_frequencies(straight_parameters)
         self.set_nominal_amplitudes(straight_parameters)
         self.isturning = False
+
+    def disrupt_couplings(self):
+        target = np.random.choice(self.couplings_remaining)
+        self.couplings_remaining = [c for c in self.couplings_remaining if c!=target]
+        
+        self.coupling_weights[target,target+1] = 0
+        self.coupling_weights[target+1,target] = 0
+        
+    def disrupt_oscillators(self):
+        target = np.random.choice(self.oscillators_remaining)
+        self.oscillators_remaining = [o for o in self.oscillators_remaining if o!=target]
+        self.disrupted_oscillators.append(target)
+
+    def disrupt_sensors(self):
+        target = np.random.choice(self.sensors_remaining)
+        self.sensors_remaining = [s for s in self.sensors_remaining if s!=target]
+        self.disrupted_sensors.append(target)
 
     def set_frequencies(self, parameters):
         """Set frequencies
@@ -145,6 +188,8 @@ class RobotParameters(dict):
                    
         self.freqs = freqs
 
+    
+        
     def set_coupling_weights(self, parameters):
         """Set coupling weights"""
         if self.decoupled:
