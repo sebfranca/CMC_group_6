@@ -18,7 +18,7 @@ def exercise_8e1(timestep, duration = 25):
        timestep = timestep
        )
    
-    sim, data = simulation(sim_params, arena='water', fast=True, headless=True)
+    sim, data = simulation(sim_params, arena='water',)
     
     
     os.makedirs('./logs/ex_8e1/', exist_ok=True)
@@ -27,7 +27,7 @@ def exercise_8e1(timestep, duration = 25):
     with open(filename.format('pickle'), 'wb') as param_file:
         pickle.dump(sim_params, param_file)
     
-    makeplots(plot=True, ex_id='8e1')
+    #makeplots(plot=True, ex_id='8e1')
     
 
 def exercise_8e2(timestep, duration = 25):
@@ -40,7 +40,7 @@ def exercise_8e2(timestep, duration = 25):
        drive_mlr = drive_mlr,
        decoupled = True,
        fb_active = True,
-       fb_gain = 0.8,
+       fb_gain = 10,
        duration = duration,
        timestep = timestep,
        
@@ -56,7 +56,7 @@ def exercise_8e2(timestep, duration = 25):
     with open(filename.format('pickle'), 'wb') as param_file:
         pickle.dump(sim_params, param_file)
     
-    makeplots(plot=True, ex_id='8e2')
+    #makeplots(plot=True, ex_id='8e2')
 
 if __name__ == '__main__':
     #exercise_8e1(timestep=1e-2)

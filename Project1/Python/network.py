@@ -63,10 +63,6 @@ def network_ode(_time, state, robot_parameters, loads):
                             amplitudes* robot_parameters.coupling_weights.T,
                             sin_matrix))
         
-        for osc in range(8):
-            if osc in robot_parameters.disrupted_oscillators:
-                thetadot[osc] = 0
-                thetadot[osc+8] = 0
         
     #Sensory feedback implementation
     if robot_parameters.fb_active:
@@ -76,9 +72,10 @@ def network_ode(_time, state, robot_parameters, loads):
             loads[8:]
             ))
         
-        loads = [0 if L in robot_parameters.disrupted_sensors
-                 else L
-                 for L in range(20)]
+        for i in range(16):
+            if i in robot_parameters.disrupted_sensors:
+                loads[i] = 0
+        
         
         thetadot += np.multiply(np.multiply(robot_parameters.feedback_gains, loads), np.cos(phases))
     
@@ -86,6 +83,11 @@ def network_ode(_time, state, robot_parameters, loads):
     
     rdot = a * (R-amplitudes)
         
+    for osc in range(16):
+        if osc in robot_parameters.disrupted_oscillators:
+            rdot[osc] = 0
+    
+    
     return np.concatenate([thetadot, rdot])
 
 

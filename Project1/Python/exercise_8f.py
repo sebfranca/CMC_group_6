@@ -12,12 +12,12 @@ def exercise_8f(timestep, duration=20):
     grid_id = '_test'
     
     min_c = 0
-    max_c = 18
+    max_c = 15
     min_gain = 0
-    max_gain = 4
+    max_gain = 100
     
     num_c = 5
-    num_gain = 5
+    num_gain = 10
     
     b2b_same_couplings = np.linspace(min_c,max_c,num_c)
     fb_gains = np.linspace(min_gain,max_gain,num_gain)
