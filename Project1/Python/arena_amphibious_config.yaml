@@ -15,10 +15,9 @@ spawn:
   - 0
   - 0
   - 0
-ground_height: 0.0
 water:
   sdf: arena_water.sdf
-  height: -0.1
+  height: 0.0
   velocity:
   - 0
   - 0
@@ -27,3 +26,4 @@ water:
   maps:
   - ''
   - ''
+ground_height: -0.09
