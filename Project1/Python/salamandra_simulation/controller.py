@@ -26,6 +26,13 @@ class SalamandraController(AnimatController):
             ],
             np.zeros(self.network.robot_parameters['n_legs_joints'])
         ])
+        
+        # Provide salamanrdra data to robot parameters
+        self.network.robot_parameters.step(
+            iteration=iteration,
+            salamandra_data=self.animat_data,
+        )
+
         # Network integration step
         self.network.step(iteration, time, timestep, loads)
 
