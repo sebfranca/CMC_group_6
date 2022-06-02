@@ -140,6 +140,28 @@ class RobotParameters(dict):
         target = np.random.choice(self.sensors_remaining)
         self.sensors_remaining = [s for s in self.sensors_remaining if s!=target]
         self.disrupted_sensors.append(target)
+        
+    def step(self, iteration, salamandra_data):
+        """Step function called at each iteration
+
+        Parameters
+        ----------
+
+        salamanra_data: salamandra_simulation/data.py::SalamandraData
+            Contains the robot data, including network and sensors.
+
+        gps (within the method): Numpy array of shape [9x3]
+            Numpy array of size 9x3 representing the GPS positions of each link
+            of the robot along the body. The first index [0-8] coressponds to
+            the link number from head to tail, and the second index [0,1,2]
+            coressponds to the XYZ axis in world coordinate.
+
+        """
+        gps = np.array(
+            salamandra_data.sensors.links.urdf_positions()[iteration, :9],
+        )
+
+
 
     def set_frequencies(self, parameters):
         """Set frequencies
