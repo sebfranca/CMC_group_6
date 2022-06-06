@@ -51,11 +51,17 @@ def run_network(duration, update=False):
         len(network.robot_parameters.freqs)
     ])
     freqs_log[0, :] = network.robot_parameters.freqs
+    #print(freqs_log[0, :])
     outputs_log = np.zeros([
         n_iterations,
         len(network.get_motor_position_output(iteration=0))
     ])
     outputs_log[0, :] = network.get_motor_position_output(iteration=0)
+    neural_log = np.zeros([
+        n_iterations,
+        len(network.outputs(iteration=0))
+    ])
+    neural_log[0, :] = network.outputs(iteration=0)
     
     # Run network ODE and log data
     drives = np.linspace(0.5,5.5, len(times))
@@ -71,6 +77,7 @@ def run_network(duration, update=False):
         amplitudes_log[i+1, :] = network.state.amplitudes(iteration=i+1)
         outputs_log[i+1, :] = network.get_motor_position_output(iteration=i+1)
         freqs_log[i+1, :] = network.robot_parameters.freqs
+        neural_log[i+1, : ] = network.outputs(iteration=i+1)
     toc = time.time()
     
     # Network performance
@@ -78,11 +85,11 @@ def run_network(duration, update=False):
         n_iterations,
         toc - tic
     ))
-
+    print(neural_log.shape)
     # Implement plots of network results
     thetadot_log = calculate_thetadots(timestep, phases_log)
-    pylog.warning('Implement plots')
-    generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, thetadot_log, drives)
+    #pylog.warning('Implement plots')
+    generate_plots(times, phases_log, amplitudes_log, outputs_log, neural_log, freqs_log, thetadot_log, drives)
 
 
 def calculate_thetadots(timestep, phases_log):
@@ -93,12 +100,13 @@ def calculate_thetadots(timestep, phases_log):
     return thetadot_log
 
 
-def generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, thetadot_log, drives):
+def generate_plots(times, phases_log, amplitudes_log, outputs_log, neural_log, freqs_log, thetadot_log, drives):
     fig, axs = plt.subplots(4, 1)
     #plot_amplitude(amplitudes_log)
-    plot_output(times, outputs_log, axs)
+    #plot_output(times, outputs_log, axs)
+    plot_neural_output(times, neural_log, axs)
     plot_thetadot(times, thetadot_log, axs)
-    plot_drive(times, drives, outputs_log, thetadot_log, axs)
+    plot_drive(times, drives, neural_log, outputs_log, thetadot_log, axs)
     
     plt.show()
     
@@ -107,11 +115,50 @@ def generate_plots(times, phases_log, amplitudes_log, outputs_log, freqs_log, th
     plot_freq(drives, freqs_log, axs2)
     plot_amplitude(drives, amplitudes_log, axs2)
     
+    plt.show()
+    
+    fig3, axs3 = plt.subplots(4,1)
+    
+    # Plot limb and body oscillations
+    axs3[0].plot(times, neural_log[:,0],
+                 color='k')
+    axs3[0].plot(times, neural_log[:,16]-1.5, color='k', linestyle='--')
+    axs3[0].set_xticks([])
+    axs3[0].set_yticks([])
+    axs3[0].set_ylabel('x')
+    axs3[0].set_xlim(0, times[-1])
+    
+    # Plot 
+    axs3[1].plot(times, freqs_log[:,1], color='k', label='Body')
+    axs3[1].plot(times, freqs_log[:,16], color='k', linestyle='--', label='Limb')
+    axs3[1].set_ylim(-0.1,1.5)
+    axs3[1].set_xlim(0, times[-1])
+    axs3[1].set_xticks([])
+    
+    axs3[1].set_ylabel('Freq [Hz]')
+    
+    # Plot amplitude
+    axs3[2].plot(times, amplitudes_log[:,1], color='k', label='Body')
+    axs3[2].plot(times, amplitudes_log[:,16], color='k', linestyle='--', label='Limb')
+    #axs3[2].set_xlim(0,6)
+    axs3[2].set_xlim(0, times[-1])
+    axs3[2].set_ylim(-0.1,0.7)
+    axs3[2].set_ylabel('r')
+    axs3[2].set_xticks([])
+    
+    # Plot freq
+    axs3[3].plot(times,drives, 'k')
+    axs3[3].hlines([1,3,5],0,times[-1], color='k', linestyle='dotted')
+    axs3[3].set_xlabel('Time [s]')
+    axs3[3].set_ylabel('d (drive)')
+    axs3[3].set_xlim(0, times[-1])
     
     plt.show()
 
 
-def plot_amplitude(drives, amplitudes_log, axs):
+
+def plot_amplitude(drives, amplitudes_log, axs, third=False):
+
     axs[1].plot(drives, amplitudes_log[:,1], color='k', label='Body')
     axs[1].plot(drives, amplitudes_log[:,16], color='k', linestyle='--', label='Limb')
     axs[1].set_xlim(0,6)
@@ -124,23 +171,56 @@ def plot_amplitude(drives, amplitudes_log, axs):
     
     return
 def plot_output(times, outputs_log, axs):
-    print(outputs_log.shape)
-    axs[0].plot(times, outputs_log[:,:8] - np.repeat(np.resize(np.linspace(0,10*np.pi/3,8),[1,8]),np.size(outputs_log,0),axis=0))
+    
+    labels_trunk=['x1', 'x2', 'x3', 'x4']
+    labels_tail=['x5', 'x6', 'x7', 'x8']
+    
+    axs[0].plot(times, outputs_log[:,:4] - np.repeat(np.resize(np.linspace(0,4.5*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
+            label=labels_trunk, color='blue')
+    axs[0].plot(times, outputs_log[:,4:8] - np.repeat(np.resize(np.linspace(6*np.pi/3,10*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
+            label=labels_tail, color='green')
     axs[0].set_ylabel('x Body')
     axs[0].set_yticklabels([])
     axs[0].set_xlim(0, times[-1])
-    
-    axs[1].plot(times, outputs_log[:,9], color='blue')
-    axs[1].plot(times, outputs_log[:,11]  + 1, color='green')
+    #axs[0].legend()
+
+    axs[1].plot(times, outputs_log[:,9], color='blue', label='x17') 
+    axs[1].plot(times, outputs_log[:,11]  + 1, color='green', label='x19') 
     axs[1].set_ylabel('x Limb')
     axs[1].set_yticklabels([])
     axs[1].set_xlim(0, times[-1])
+    #axs[1].legend()
+    
+def plot_neural_output(times, outputs_log, axs):
+    
+    labels_trunk=['x1', 'x2', 'x3', 'x4']
+    labels_tail=['x5', 'x6', 'x7', 'x8']
+    
+    axs[0].plot(times, outputs_log[:,:4] - np.repeat(np.resize(np.linspace(0,4.5*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
+            label=labels_trunk, color='blue')
+    axs[0].plot(times, outputs_log[:,4:8] - np.repeat(np.resize(np.linspace(6*np.pi/3,10*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
+            label=labels_tail, color='green')
+    axs[0].set_ylabel('x Body')
+    axs[0].set_yticklabels([])
+    axs[0].set_xticklabels([])
+    axs[0].set_xlim(0, times[-1])
+    #axs[0].legend()
+
+    axs[1].plot(times, outputs_log[:,16], color='blue', label='x17') 
+    axs[1].plot(times, outputs_log[:,18]  - 1.5, color='green', label='x19') 
+    axs[1].set_ylabel('x Limb')
+    axs[1].set_yticklabels([])
+    axs[1].set_ylim([min(outputs_log[:,16])-2, max(outputs_log[:,16])+1.5])
+    axs[1].set_xlim(0, times[-1])
+    axs[1].set_xticklabels([])
+    #axs[1].legend()
 
 def plot_thetadot(times,thetadot_log,axs):
     axs[2].plot(times, thetadot_log, color='k')
     axs[2].set_xlim(0, times[-1])
     axs[2].set_ylabel('Freq [Hz]')
     axs[2].set_ylim(0,1.5*np.max(thetadot_log))
+    axs[2].set_xticklabels([])
 
 def plot_freq(drives, freqs_log, axs):
 
@@ -155,32 +235,32 @@ def plot_freq(drives, freqs_log, axs):
     
     
 
-def plot_drive(times, drives, outputs_log, thetadot_log, axs):
+def plot_drive(times, drives, neural_log, outputs_log, thetadot_log, axs):
     
     supLimb= False
     supBody = False
     supAll = False
     for i,d in enumerate(drives):
         if d>1 and not supLimb:
-            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8])*1.1, linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+1), linestyle='--', color='grey')
-            axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8])*1.1, linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= -2, ymax=np.max(neural_log[:,16:]+1), linestyle='--', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='--', color='grey')
             axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
             axs[3].text(0.2, 0.45,'Walking' ,horizontalalignment='center',
      verticalalignment='center', transform = axs[3].transAxes)
             supLimb = True
         if d>3 and not supBody:
-            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8]*1.1), linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+1), linestyle='--', color='grey')
-            axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8]*1.1), linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= -2, ymax=np.max(neural_log[:,16:]+1), linestyle='--', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='--', color='grey')
             axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
             axs[3].text(0.6, 0.8,'Swimming' ,horizontalalignment='center',
      verticalalignment='center', transform = axs[3].transAxes)
             supBody = True
         elif d>5 and not supAll:
-            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(outputs_log[:,:8]*1.1), linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= 0, ymax=np.max(outputs_log[:,8:]+1), linestyle='--', color='grey')
-            axs[2].vlines(x=times[i], ymin= 0, ymax=np.max(thetadot_log), linestyle='--', color='grey')
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8]*1.1), linestyle='--', color='grey')
+            axs[1].vlines(x=times[i], ymin= -2, ymax=np.max(neural_log[:,16:]+1), linestyle='--', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='--', color='grey')
             axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
             supAll = True
     
@@ -196,7 +276,7 @@ def plot_drive(times, drives, outputs_log, thetadot_log, axs):
 def main(plot):
     """Main"""
 
-    run_network(duration=20, update=True)
+    run_network(duration=40, update=True)
 
     # Show plots
     if plot:

@@ -184,7 +184,8 @@ class RobotParameters(dict):
         left =  [0,1,2,3,4,5,6,7,16,18]
         right = [8,9,10,11,12,13,14,15,17,19]
         
-        d = self.drive_mlr        
+        d = self.drive_mlr    
+        
         #Turning modifications
         if parameters.turn_instruction == "right":
             self.d_r = d - self.drive_offset_turn
@@ -338,6 +339,7 @@ class RobotParameters(dict):
                         nominal_amplitudes[i] = r_drive_limb(self.d_r)
             
             self.nominal_amplitudes = nominal_amplitudes
+            #print(nominal_amplitudes)
 
     def set_feedback_gains(self, parameters):
         """Set feeback gains"""        

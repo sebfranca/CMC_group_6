@@ -23,12 +23,8 @@ def network_ode(_time, state, robot_parameters, loads):
         Returns derivative of state (phases and amplitudes)
 
     """
-    # Implementation of turning:
-        #get the iteration and the current turn instruction
-        #update robot_parameters (freqs + amplitudes) accordingly:
-            #turn if needed --> change the drive
-            #end turn if needed --> reset the drive
-    iteration = round(_time/robot_parameters.timestep)  
+
+    iteration = np.floor(_time/robot_parameters.timestep).astype(int)-1
     if robot_parameters.turns[iteration] != "None":
         instruction = robot_parameters.turns[iteration]
         robot_parameters.perform_turn(instruction)
@@ -42,6 +38,11 @@ def network_ode(_time, state, robot_parameters, loads):
     phases = state[:n_oscillators]
     amplitudes = state[n_oscillators:2*n_oscillators]
     
+    # Mititgate potential floating point errors
+    '''for idx, amplitude in enumerate(amplitudes):
+        if np.abs(amplitude)<1e-38:
+            amplitudes[idx] = 0'''
+
     a = robot_parameters.rates
     R = robot_parameters.nominal_amplitudes
     
@@ -79,10 +80,9 @@ def network_ode(_time, state, robot_parameters, loads):
         
         thetadot += np.multiply(np.multiply(robot_parameters.feedback_gains, loads), np.cos(phases))
     
+    rdot = a * (R-amplitudes)  
+
     
-    
-    rdot = a * (R-amplitudes)
-        
     for osc in range(16):
         if osc in robot_parameters.disrupted_oscillators:
             rdot[osc] = 0
@@ -148,7 +148,8 @@ class SalamandraNetwork:
             loads = np.zeros(self.robot_parameters.n_joints)
         if iteration + 1 >= self.n_iterations:
             return
-        self.solver.set_f_params(self.robot_parameters, loads)
+        
+        self.solver.set_f_params(self.robot_parameters, loads.astype(float))
         self.state.array[iteration+1, :] = self.solver.integrate(time+timestep)
 
     def outputs(self, iteration=None):

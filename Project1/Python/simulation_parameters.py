@@ -11,7 +11,7 @@ class SimulationParameters:
         # Default parameters
         self.n_body_joints = 8
         self.n_legs_joints = 4
-        self.duration = kwargs.get("duration",30)
+        self.duration = kwargs.get("duration",40)
         self.timestep = kwargs.get("timestep",1e-2)
         self.times = np.arange(0,self.duration,self.timestep)
         self.n_iterations = len(self.times)
@@ -20,7 +20,7 @@ class SimulationParameters:
         self.amplitude_gradient = None
         self.spawn_position=[0, 0, 0.1]  # Robot position in [m]
         self.spawn_orientation=[0, 0, 0]  # Orientation in Euler angles [rad]
-        self.drive_mlr = 2
+        self.drive_mlr = 0#2
         
         #Parameters used to force the definition of matrices, 
         #in robot_parameters.py
