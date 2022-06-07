@@ -380,9 +380,13 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         joints_velocities = data.sensors.joints.velocities_all()
         joints_torques = data.sensors.joints.motor_torques_all()
         
-        plt.figure()
+        fig,axs = plt.subplots()
         for i in range(len(joints_positions[0,:])-4):
-            plt.plot(times, np.asarray(joints_positions[:,i]) - 1.2*i)
+            axs.plot(times, np.asarray(joints_positions[:,i]) - 1.2*i, label=str(i))
+        axs.set_yticklabels([])
+        axs.legend(loc = 'center left')
+        axs.set_xlabel("Time[s]")
+        axs.set_ylabel("Body joints positions [arbitrary units]")
     
     elif ex_id == "9b":
         data = SalamandraData.from_file('logs/ex_{}/{}.{}'.format(ex_id,grid_id,'h5'))
@@ -405,15 +409,22 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         joints_velocities = data.sensors.joints.velocities_all()
         joints_torques = data.sensors.joints.motor_torques_all()
         
-        fig, axs = plt.subplots(3,1, sharex=(True))
-        axs[2].plot(times,head_positions[:,0])
+        fig, axs = plt.subplots(2,1, sharex=(True))
         for i in range(len(joints_positions[0,:])-4):
-            axs[0].plot(times, np.asarray(joints_positions[:,i]) - 1.2*i)
+            axs[0].plot(times, np.asarray(joints_positions[:,i]) - 1.2*i, label=str(i))
         for i in range(len(joints_positions[0,-4:])):
-            axs[1].plot(times, np.asarray(joints_positions[:,i]) - 1.2*i)
+            axs[1].plot(times, np.cos(osc_phases[:,i+16]) - 3*i, label=str(16+i))
+        axs[0].set_ylabel("Body positions")
+        axs[0].set_yticklabels([])
+        axs[0].legend(loc = 'center left')
+        axs[1].set_xlabel("Time [s]")
+        axs[1].set_ylabel("Limb positions") #Cosine projection
+        axs[1].set_yticklabels([])
+        axs[1].legend(loc = 'center left')
             
+        
         
 
 if __name__ == '__main__':
-    main(plot=not save_plots(), ex_id = '9b', grid_id='walk2swim')
+    main(plot=not save_plots(), ex_id = '9a_grid', grid_id='amplitude')
 

@@ -48,7 +48,7 @@ def exercise_9b(timestep, duration=20):
         spawn_position=[2.5, 0, 0.0],
         spawn_orientation=[0, 0, np.pi],
     )
-    _sim, _data = simulation(
+    sim, data = simulation(
         sim_parameters=sim_parameters,
         arena='amphibious',
         fast=True,

@@ -176,19 +176,20 @@ class RobotParameters(dict):
             salamandra_data.sensors.links.urdf_positions()[iteration, :9],
         )
         
-        #Reach the ground
-        if self.swims and gps[0,0]<1:
-            self.swims = False
-            self.walks = True
-            print("Initializing transition !")
-            self.transition()
-        
-        #Reach the water
-        if self.walks and gps[0,0]>1.5:
-            self.swims = True
-            self.walks = False
-            print("Initializing transition !")
-            self.transition()
+        if self.amphibious:
+            #Reach the ground
+            if self.swims and gps[0,0]<1:
+                self.swims = False
+                self.walks = True
+                print("Initializing transition !")
+                self.transition()
+            
+            #Reach the water
+            if self.walks and gps[0,0]>1.5:
+                self.swims = True
+                self.walks = False
+                print("Initializing transition !")
+                self.transition()
             
         
         
