@@ -116,7 +116,7 @@ def obtain_speed(times, link_data):
 
 def main(plot=True, ex_id = '8b', grid_id = 0):
     """Main"""
-    if ex_id in ['8b','8c','8f']:
+    if ex_id in ['8b','8c','8f', '9a_grid']:
         exists=True
         max_iter = 0
         while exists:
@@ -125,9 +125,17 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
                 max_iter = max_iter-1
             else: max_iter = max_iter + 1
         
-        results_speed = np.zeros((max_iter+1,3))    
-        results_energy = np.zeros((max_iter+1,3))
-        results_objective = np.zeros((max_iter+1,3))
+        if ex_id == '9a_grid':
+            results_speed = np.zeros((max_iter+1,2))    
+            results_energy = np.zeros((max_iter+1,2))
+            results_objective = np.zeros((max_iter+1,2))
+        
+        else:
+            results_speed = np.zeros((max_iter+1,3))    
+            results_energy = np.zeros((max_iter+1,3))
+            results_objective = np.zeros((max_iter+1,3))
+        
+        
         
         for sim_id in range(max_iter+1):    
             #Load data
@@ -149,6 +157,11 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
             if parameters.exercise_8f:
                 fb_gain = parameters.fb_gain
                 coupling = parameters.b2b_same_coupling
+            if parameters.exercise_9a_phase:
+                phase_bias = parameters.l2b_phase
+            if parameters.exercise_9a_amplitude:
+                amp = parameters.body_amplitude
+            
             osc_phases = data.state.phases()
             osc_amplitudes = data.state.amplitudes()
             links_positions = data.sensors.links.urdf_positions()
@@ -171,7 +184,10 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
                 results_speed[sim_id,:] = np.hstack((nominal_amplitude_parameters[0], nominal_amplitude_parameters[1], avg_speed))
             if parameters.exercise_8f:
                 results_speed[sim_id,:] = np.hstack((fb_gain, coupling, avg_speed))
-            
+            if parameters.exercise_9a_phase:
+                results_speed[sim_id,:] = np.hstack((phase_bias, avg_speed))
+            if parameters.exercise_9a_amplitude:
+                results_speed[sim_id,:] = np.hstack((amp, avg_speed))
             #Total energy = Sum(velocity*torque*timestep)
             # We start from index 1000 (t=10s) to remove transient
             tot_energy=np.sum(np.abs(np.asarray(joints_velocities[1000:,:])*np.asarray(joints_torques[1000:,:])*timestep))
@@ -190,6 +206,12 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
             if parameters.exercise_8f:
                 results_energy[sim_id,:] =  np.hstack((fb_gain, coupling, tot_energy))
                 results_objective[sim_id,:] = np.hstack((fb_gain, coupling, objective))
+            if parameters.exercise_9a_phase:
+                results_energy[sim_id,:] =  np.hstack((phase_bias, tot_energy))
+                results_objective[sim_id,:] = np.hstack((phase_bias, objective))
+            if parameters.exercise_9a_amplitude:
+                results_energy[sim_id,:] =  np.hstack((amp, tot_energy))
+                results_objective[sim_id,:] = np.hstack((amp, objective))
         
         if parameters.exercise_8b == True :
             plt.figure("Speed") 
@@ -218,6 +240,21 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
             plt.figure("Speed/energy")
             plot_2d(results_objective,["Feedback gain [arbitrary units]","Intersegmental coupling [arbitrary units]", "Speed^2/Energy [kg^-1]"], n_data=round(np.sqrt(max_iter)))
             plt.savefig("8f_objective.png")
+            
+        if parameters.exercise_9a_phase:
+            plt.figure("Speed") 
+            plot_1d(results_speed,["Limb-to-body phase [rads]", "Average speed [m/s]"])
+            plt.figure("Energy")            
+            plot_1d(results_energy,["Limb-to-body phase [rads]", "Total energy [J]"])
+            plt.figure("Speed/energy")
+            plot_1d(results_objective,["Limb-to-body phase [rads]", "Speed^2/Energy [kg^-1]"])
+        if parameters.exercise_9a_amplitude:
+            plt.figure("Speed") 
+            plot_1d(results_speed,["Body amplitude [arbitrary units]", "Average speed [m/s]"])
+            plt.figure("Energy")            
+            plot_1d(results_energy,["Body amplitude [arbitrary units]", "Total energy [J]"])
+            plt.figure("Speed/energy")
+            plot_1d(results_objective,["Body amplitude [arbitrary units]", "Speed^2/Energy [kg^-1]"])
     
     elif ex_id in ['8d1','8d2']:
         #Load data
@@ -322,8 +359,34 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         print("Average speed : {} \nTotal energy: {} \nObjective function: {}".format(
             avg_speed,tot_energy,objective))
         
+    elif ex_id in ['9a_simple']:
+        data = SalamandraData.from_file('logs/ex_{}/{}.{}'.format(ex_id,grid_id,'h5'))
+        with open('logs/ex_{}/{}.pickle'.format(ex_id,grid_id),'rb') as param_file:
+            parameters = pickle.load(param_file)
+        timestep = data.timestep
+        n_iterations = np.shape(data.sensors.links.array)[0]
+        times = np.arange(
+            start=0,
+            stop = timestep*n_iterations,
+            step = timestep,)
+        timestep = times[1] - times[0]
+        
+        osc_phases = data.state.phases()
+        osc_amplitudes = data.state.amplitudes()
+        links_positions = data.sensors.links.urdf_positions()
+        head_positions = links_positions[:, 0, :]
+        tail_positions = links_positions[:, 8, :]
+        joints_positions = data.sensors.joints.positions_all()
+        joints_velocities = data.sensors.joints.velocities_all()
+        joints_torques = data.sensors.joints.motor_torques_all()
+        
+        plt.figure()
+        for i in range(len(joints_positions[0,:])-4):
+            plt.plot(times, np.asarray(joints_positions[:,i]) - 1.2*i)
+    
 
+        
 
 if __name__ == '__main__':
-    main(plot=not save_plots(), ex_id = '8e2', grid_id='_final2')
+    main(plot=not save_plots(), ex_id = '9a_grid', grid_id='phase')
 

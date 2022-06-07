@@ -28,9 +28,13 @@ class SimulationParameters:
         self.exercise_8c = False
         self.decoupled = False
         self.exercise_8f = False
+        self.exercise_9a_phase = False
+        self.exercise_9a_amplitude = False
         self.nominal_amplitude_parameters = np.zeros(2)
         self.nominal_amplitudes = np.zeros(20)
         self.phase_bias = np.zeros([20,20])
+        self.l2b_phase = 0
+        self.body_amplitude = 0
         
         #Parameters used for turning and going backward
         self.turns = ["None" for i in range(self.n_iterations)] #all turn instructions

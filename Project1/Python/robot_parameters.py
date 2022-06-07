@@ -38,7 +38,10 @@ class RobotParameters(dict):
         self.exercise_8c = False
         self.decoupled = False
         self.exercise_8f = False
+        self.exercise_9a_phase = False
+        self.exercise_9a_amplitude = False
         self.nominal_amplitude_parameters = np.zeros(2) #Rhead and Rtail
+        self.body_amplitude = 0
                 
         #Parameters used for turning and backward motion
         self.timestep = 0 #used in network.py::network_ode
@@ -82,6 +85,10 @@ class RobotParameters(dict):
         self.n_disruption_couplings = parameters.n_disruption_couplings
         self.n_disruption_oscillators = parameters.n_disruption_oscillators
         self.n_disruption_sensors = parameters.n_disruption_sensors
+        self.exercise_9a_phase = parameters.exercise_9a_phase
+        self.l2b_phase = parameters.l2b_phase
+        self.exercise_9a_amplitude = parameters.exercise_9a_amplitude
+        self.body_amplitude = parameters.body_amplitude
         
         #Based on some functions
         self.set_frequencies(parameters)  # f_i
@@ -231,6 +238,7 @@ class RobotParameters(dict):
                 'l2l_opp' : [10],
                 'l2b' : [30]
                 }    
+         
         else:
             coupling_params = {
                 'b2b_same' : [10],
@@ -256,6 +264,16 @@ class RobotParameters(dict):
                 'l2l_opp' : [np.pi],
                 'l2b' : [0]
                 }
+            
+            elif self.exercise_9a_phase:
+                phase_lag_params = {
+                'b2b_same' : [2*np.pi/8],
+                'b2b_opp' : [np.pi],
+                'l2l_same' : [np.pi],
+                'l2l_opp' : [np.pi],
+                'l2b' : [self.l2b_phase]
+                }
+            
             else:
                 phase_lag_params = {
                 'b2b_same' : [2*np.pi/8],
@@ -328,10 +346,13 @@ class RobotParameters(dict):
                 self.d_l = d
                 
             for i in range(16):
-                if i in left and not bodySaturatesHigh(self.d_l) and not bodySaturatesLow(self.d_l):
-                        nominal_amplitudes[i] = r_drive_body(self.d_l)
-                elif i in right and not bodySaturatesHigh(self.d_r) and not bodySaturatesLow(self.d_r):
-                        nominal_amplitudes[i] = r_drive_body(self.d_r)
+                if self.exercise_9a_amplitude:
+                    nominal_amplitudes[i] = self.body_amplitude
+                else:
+                    if i in left and not bodySaturatesHigh(self.d_l) and not bodySaturatesLow(self.d_l):
+                            nominal_amplitudes[i] = r_drive_body(self.d_l)
+                    elif i in right and not bodySaturatesHigh(self.d_r) and not bodySaturatesLow(self.d_r):
+                            nominal_amplitudes[i] = r_drive_body(self.d_r)
             for i in range(16,20):
                 if i in left and not limbSaturatesHigh(self.d_l) and not limbSaturatesLow(self.d_l):
                         nominal_amplitudes[i] = r_drive_limb(self.d_l)
