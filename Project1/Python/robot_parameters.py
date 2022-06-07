@@ -65,6 +65,13 @@ class RobotParameters(dict):
         self.sensors_remaining = [i for i in range(16)]
         self.disrupted_sensors = []
         
+        
+        #Amphibious parameters
+        self.amphibious = False
+        self.swims = True
+        self.walks = False
+        
+        
         self.update(parameters)
 
     def update(self, parameters):
@@ -89,6 +96,7 @@ class RobotParameters(dict):
         self.l2b_phase = parameters.l2b_phase
         self.exercise_9a_amplitude = parameters.exercise_9a_amplitude
         self.body_amplitude = parameters.body_amplitude
+        self.amphibious = parameters.amphibious
         
         #Based on some functions
         self.set_frequencies(parameters)  # f_i
@@ -167,9 +175,63 @@ class RobotParameters(dict):
         gps = np.array(
             salamandra_data.sensors.links.urdf_positions()[iteration, :9],
         )
+        
+        #Reach the ground
+        if self.swims and gps[0,0]<1:
+            self.swims = False
+            self.walks = True
+            print("Initializing transition !")
+            self.transition()
+        
+        #Reach the water
+        if self.walks and gps[0,0]>1.5:
+            self.swims = True
+            self.walks = False
+            print("Initializing transition !")
+            self.transition()
+            
+        
+        
+        
+        # print("Amphibious:" + str(self.amphibious))
+        # print("Swims:" + str(self.swims))
+        # print("Walks:" + str(self.walks))
+        # print(gps[0,0])
+        
 
-
-
+    def transition(self):
+        """Transition swim2walk or walk2swim:
+            update nominal amplitudes + frequencies"""
+            
+        limbSaturatesLow = lambda x: x<1
+        limbSaturatesHigh = lambda x: x>3
+        bodySaturatesLow = lambda x: x<1
+        bodySaturatesHigh = lambda x: x>5
+        f_drive_body = lambda x: 0.2*x + 0.3
+        f_drive_limb = lambda x: 0.2*x
+        r_drive_body = lambda x: 0.065*x + 0.196
+        r_drive_limb = lambda x: 0.131*x + 0.131
+        
+        if self.swims:
+            d = self.drive_mlr
+        elif self.walks:
+            d = self.drive_mlr/2
+            
+        
+        freqs = np.zeros(20)
+        nominal_amplitudes = np.zeros(20)
+        for i in range(16):
+            if not bodySaturatesHigh(d) and not bodySaturatesLow(d):
+                freqs[i] = f_drive_body(d)
+                nominal_amplitudes[i] = r_drive_body(d)
+        for i in range(16,20):
+            if not limbSaturatesHigh(d) and not limbSaturatesLow(d):
+                freqs[i] = f_drive_limb(d)
+                nominal_amplitudes[i] = r_drive_limb(d)
+        
+        self.freqs = freqs
+        self.nominal_amplitudes = nominal_amplitudes
+           
     def set_frequencies(self, parameters):
         """Set frequencies
         --> left and right oscillators may receive a different drive,
@@ -184,6 +246,8 @@ class RobotParameters(dict):
         limbSaturatesHigh = lambda x: x>3
         bodySaturatesLow = lambda x: x<1
         bodySaturatesHigh = lambda x: x>5
+        
+        
         
         f_drive_body = lambda x: 0.2*x + 0.3
         f_drive_limb = lambda x: 0.2*x
@@ -217,7 +281,7 @@ class RobotParameters(dict):
                     freqs[i] = f_drive_limb(self.d_r)
                    
         self.freqs = freqs
-
+        
     
         
     def set_coupling_weights(self, parameters):
@@ -305,6 +369,8 @@ class RobotParameters(dict):
         bodySaturatesLow = lambda x: x<1
         bodySaturatesHigh = lambda x: x>5.
         
+        
+           
         r_drive_body = lambda x: 0.065*x + 0.196
         r_drive_limb = lambda x: 0.131*x + 0.131
         

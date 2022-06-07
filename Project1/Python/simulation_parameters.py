@@ -54,6 +54,9 @@ class SimulationParameters:
         self.n_disruption_couplings = 0
         self.n_disruption_oscillators = 0
         self.n_disruption_sensors = 0
+        
+        #Amphibious arena
+        self.amphibious = False
 
         # Update object with provided keyword arguments
         # NOTE: This overrides the previous declarations

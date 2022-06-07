@@ -384,9 +384,36 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         for i in range(len(joints_positions[0,:])-4):
             plt.plot(times, np.asarray(joints_positions[:,i]) - 1.2*i)
     
-
+    elif ex_id == "9b":
+        data = SalamandraData.from_file('logs/ex_{}/{}.{}'.format(ex_id,grid_id,'h5'))
+        with open('logs/ex_{}/{}.pickle'.format(ex_id,grid_id),'rb') as param_file:
+            parameters = pickle.load(param_file)
+        timestep = data.timestep
+        n_iterations = np.shape(data.sensors.links.array)[0]
+        times = np.arange(
+            start=0,
+            stop = timestep*n_iterations,
+            step = timestep,)
+        timestep = times[1] - times[0]
+        
+        osc_phases = data.state.phases()
+        osc_amplitudes = data.state.amplitudes()
+        links_positions = data.sensors.links.urdf_positions()
+        head_positions = links_positions[:, 0, :]
+        tail_positions = links_positions[:, 8, :]
+        joints_positions = data.sensors.joints.positions_all()
+        joints_velocities = data.sensors.joints.velocities_all()
+        joints_torques = data.sensors.joints.motor_torques_all()
+        
+        fig, axs = plt.subplots(3,1, sharex=(True))
+        axs[2].plot(times,head_positions[:,0])
+        for i in range(len(joints_positions[0,:])-4):
+            axs[0].plot(times, np.asarray(joints_positions[:,i]) - 1.2*i)
+        for i in range(len(joints_positions[0,-4:])):
+            axs[1].plot(times, np.asarray(joints_positions[:,i]) - 1.2*i)
+            
         
 
 if __name__ == '__main__':
-    main(plot=not save_plots(), ex_id = '9a_grid', grid_id='phase')
+    main(plot=not save_plots(), ex_id = '9b', grid_id='walk2swim')
 
