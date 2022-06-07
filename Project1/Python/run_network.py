@@ -192,7 +192,7 @@ def generate_plots(times, phases_log, amplitudes_log, outputs_log, neural_log, f
     plot_thetadot(times, thetadot_log, axs)
     plot_drive(times, drives, neural_log, outputs_log, thetadot_log, axs)
     plt.subplots_adjust(hspace=0.4)
-    plt.show()
+    plt.savefig('8a_1.pdf')
     
     
     fig2, axs2 = plt.subplots(2,1)
@@ -200,7 +200,7 @@ def generate_plots(times, phases_log, amplitudes_log, outputs_log, neural_log, f
     plot_freq(drives, freqs_log, axs2)
     plot_amplitude(drives, amplitudes_log, axs2)
     
-    plt.show()
+    plt.savefig('8a_2.pdf')
     
     fig3, axs3 = plt.subplots(4,1)
     letter_subplots(xoffset=1.05, yoffset=0.5, start='C')
@@ -239,7 +239,7 @@ def generate_plots(times, phases_log, amplitudes_log, outputs_log, neural_log, f
     axs3[3].set_ylabel('d (drive)')
     axs3[3].set_xlim(0, times[-1])
     
-    plt.show()
+    plt.savefig('8a_3.pdf')
 
 
 
@@ -278,23 +278,35 @@ def plot_output(times, outputs_log, axs):
     #axs[1].legend()
     
 def plot_neural_output(times, outputs_log, axs):
-    
+    axis_font = {'size':'4'}
     labels_trunk=['x1', 'x2', 'x3', 'x4']
     labels_tail=['x5', 'x6', 'x7', 'x8']
     
-    axs[0].plot(times, outputs_log[:,:4] - np.repeat(np.resize(np.linspace(0,4.5*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
-            label=labels_trunk, color='blue')
-    axs[0].plot(times, outputs_log[:,4:8] - np.repeat(np.resize(np.linspace(6*np.pi/3,10*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
-            label=labels_tail, color='green')
+    #axs[0].plot(times, outputs_log[:,:4] - np.repeat(np.resize(np.linspace(0,4.5*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
+    #        label=labels_trunk, color='blue')
+    for i in range(4):
+        axs[0].plot(times, outputs_log[:,i] +((3-i)*np.pi/3)+np.pi/6,
+                label=labels_trunk, color='blue', linewidth=1)
+        axs[0].text(1, (3-i)*1.05+0.65, 'x'+str(i+1),**axis_font)
+        
+        axs[0].plot(times, outputs_log[:,i+4] -i*np.pi/3-np.pi/6,
+                label=labels_trunk, color='green', linewidth=1)
+        axs[0].text(1, -i*1.05-0.4, 'x'+str(i+5),**axis_font)
+        
+    #axs[0].plot(times, outputs_log[:,4:8] - np.repeat(np.resize(np.linspace(6*np.pi/3,10*np.pi/3,4),[1,4]),np.size(outputs_log,0),axis=0),
+    #        label=labels_tail, color='green')
     axs[0].set_ylabel('x Body')
     axs[0].set_yticklabels([])
     axs[0].set_xticklabels([])
     axs[0].set_xlim(0, times[-1])
+    axs[0].set_ylim(-5*np.pi/3, 5*np.pi/3)
     axs[0].tick_params(axis="x",direction="in", pad=-15)
     #axs[0].legend()
 
-    axs[1].plot(times, outputs_log[:,16], color='blue', label='x17') 
-    axs[1].plot(times, outputs_log[:,18] - np.pi/3, color='green', label='x19') 
+    axs[1].plot(times, outputs_log[:,16], color='blue', label='x17', linewidth=1) 
+    axs[1].text(1, 0.2, 'x17', **axis_font)
+    axs[1].plot(times, outputs_log[:,18] - np.pi/3, color='green', label='x19', linewidth=1) 
+    axs[1].text(1, -1, 'x19', **axis_font)
     axs[1].set_ylabel('x Limb')
     axs[1].set_yticklabels([])
     axs[1].set_ylim([min(outputs_log[:,16])-2, max(outputs_log[:,16])+1.5])
@@ -329,28 +341,29 @@ def plot_drive(times, drives, neural_log, outputs_log, thetadot_log, axs):
     supLimb= False
     supBody = False
     supAll = False
+    axis_font = {'size':'8'}
     for i,d in enumerate(drives):
         if d>1 and not supLimb:
-            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8])*1.1, linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= -1-np.pi/3, ymax=np.max(neural_log[:,16:]+1.5), linestyle='--', color='grey')
-            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='--', color='grey')
-            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
-            axs[3].text(0.2, 0.45,'Walking' ,horizontalalignment='center',
-     verticalalignment='center', transform = axs[3].transAxes)
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8])*1.5+4.5, linestyle='dotted', color='grey')
+            axs[1].vlines(x=times[i], ymin= -1-np.pi/3, ymax=np.max(neural_log[:,16:]+1.5), linestyle='dotted', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='dotted', color='grey')
+            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='dotted', color='grey')
+            axs[3].text(0.15, 0.35,'Walking' ,horizontalalignment='center',
+     verticalalignment='center', transform = axs[3].transAxes, **axis_font)
             supLimb = True
         if d>3 and not supBody:
-            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8]*1.1), linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= -1-np.pi/3, ymax=np.max(neural_log[:,16:]+1.5), linestyle='--', color='grey')
-            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='--', color='grey')
-            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
-            axs[3].text(0.6, 0.8,'Swimming' ,horizontalalignment='center',
-     verticalalignment='center', transform = axs[3].transAxes)
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8])*1.5+4.5, linestyle='dotted', color='grey')
+            axs[1].vlines(x=times[i], ymin= -1-np.pi/3, ymax=np.max(neural_log[:,16:]+1.5), linestyle='dotted', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='dotted', color='grey')
+            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='dotted', color='grey')
+            axs[3].text(0.56, 0.7,'Swimming' ,horizontalalignment='center',
+     verticalalignment='center', transform = axs[3].transAxes, **axis_font)
             supBody = True
         elif d>5 and not supAll:
-            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8]*1.1), linestyle='--', color='grey')
-            axs[1].vlines(x=times[i], ymin= -1-np.pi/3, ymax=np.max(neural_log[:,16:]+1.5), linestyle='--', color='grey')
-            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='--', color='grey')
-            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='--', color='grey')
+            axs[0].vlines(x=times[i], ymin= -8*np.pi/3, ymax=np.max(neural_log[:,:8])*1.5+4.5, linestyle='dotted', color='grey')
+            axs[1].vlines(x=times[i], ymin= -1-np.pi/3, ymax=np.max(neural_log[:,16:]+1.5), linestyle='dotted', color='grey')
+            axs[2].vlines(x=times[i], ymin= 0, ymax=1.5*np.max(thetadot_log), linestyle='dotted', color='grey')
+            axs[3].vlines(x=times[i], ymin= 0, ymax=6, linestyle='dotted', color='grey')
             supAll = True
     
     axs[3].plot(times,drives, 'k')
@@ -375,5 +388,5 @@ def main(plot):
 
 
 if __name__ == '__main__':
-    main(plot=not save_plots())
+    main(plot= not save_plots())
 
