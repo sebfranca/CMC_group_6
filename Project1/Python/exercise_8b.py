@@ -13,16 +13,16 @@ def exercise_8b(timestep=1e-2, duration=20):
     #or with some text
     grid_id = '_trying' 
       
-    gridsize_phase = 2
-    gridsize_amp = 2
+    gridsize_phase = 15
+    gridsize_amp = 15
     
     s_shape = 2*np.pi/8 #the body forms a full S-shape
-    nb_S_max = 1            #number of S-shapes desired
-    min_lag = 0.05*s_shape
+    nb_S_max = 2            #number of S-shapes desired
+    min_lag = 0.0*s_shape
     max_lag = nb_S_max*s_shape
     
-    min_amp = 0.8
-    max_amp = 0.8
+    min_amp = 0
+    max_amp = 1.3
     
     
     phase_lag_params = {
@@ -79,8 +79,8 @@ def exercise_8b(timestep=1e-2, duration=20):
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
-            #fast=True,  # For fast mode (not real-time)
-            #headless=True,  # For headless mode (No GUI, could be faster)
+            fast=True,  # For fast mode (not real-time)
+            headless=True,  # For headless mode (No GUI, could be faster)
             # record=True,  # Record video
         )
         # Log robot data
