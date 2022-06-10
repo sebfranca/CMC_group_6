@@ -14,7 +14,7 @@ def init_disruptions(seed=0):
         {'n_disruption_couplings':0, 'n_disruption_oscillators':0, 'n_disruption_sensors':0}
         ]
     
-    total_disruptions = [3,6,9]
+    total_disruptions = [i for i in range(1,10)]
     
     #muted coupling
     for n_disruption_couplings in total_disruptions:
@@ -67,13 +67,11 @@ def init_disruptions(seed=0):
         
     return disruptions
 
-def exercise_8g1(timestep,  duration=20, seed=0, drive_mlr=4, disruptions = init_disruptions()):
+def exercise_8g1(timestep,  duration=20, seed=0, drive_mlr=4, disruptions = []):
     """Exercise 8g1: CPG only"""
     print('Running 8g1: CPG only (seed = {})'.format(seed))
     
     
-    np.random.seed(seed) #for repeatability: necessary or not?
-    disruptions = init_disruptions()
     
     parameter_set = [SimulationParameters(
        duration = duration,
@@ -110,8 +108,8 @@ def exercise_8g1(timestep,  duration=20, seed=0, drive_mlr=4, disruptions = init
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
-            #fast=True,  # For fast mode (not real-time)
-            #headless=True,  # For headless mode (No GUI, could be faster)
+            fast=True,  # For fast mode (not real-time)
+            headless=True,  # For headless mode (No GUI, could be faster)
             # record=True,  # Record video
         )
         # Log robot data
@@ -120,15 +118,13 @@ def exercise_8g1(timestep,  duration=20, seed=0, drive_mlr=4, disruptions = init
         with open(filename.format(seed, simulation_i, 'pickle'), 'wb') as param_file:
             pickle.dump(sim_parameters, param_file)
     
-    makeplots(plot=True, ex_id='8g1', seed=seed)
+    
 
 
-def exercise_8g2(timestep, duration=20, seed=0, drive_mlr=4, disruptions = init_disruptions()):
+def exercise_8g2(timestep, duration=20, seed=0, drive_mlr=4, disruptions = []):
     """Exercise 8g2: decoupled"""
     print('Running 8g2: decoupled (seed = {})'.format(seed))
     drive_mlr = 4
-    
-    disruptions = init_disruptions()
     
     parameter_set = [SimulationParameters(
        duration = duration,
@@ -165,8 +161,8 @@ def exercise_8g2(timestep, duration=20, seed=0, drive_mlr=4, disruptions = init_
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
-            #fast=True,  # For fast mode (not real-time)
-            #headless=True,  # For headless mode (No GUI, could be faster)
+            fast=True,  # For fast mode (not real-time)
+            headless=True,  # For headless mode (No GUI, could be faster)
             # record=True,  # Record video
         )
         # Log robot data
@@ -175,13 +171,11 @@ def exercise_8g2(timestep, duration=20, seed=0, drive_mlr=4, disruptions = init_
         with open(filename.format(seed,simulation_i, 'pickle'), 'wb') as param_file:
             pickle.dump(sim_parameters, param_file)
     
-    makeplots(plot=True, ex_id='8g2', seed=seed)
+    
 
-def exercise_8g3(timestep, duration=20, seed=0, drive_mlr=4, disruptions = init_disruptions()):
+def exercise_8g3(timestep, duration=20, seed=0, drive_mlr=4, disruptions = []):
     """Exercise 8g3: combined"""
     print('Running 8g3: combined (seed = {})'.format(seed))
-    
-    disruptions = init_disruptions()
     
     parameter_set = [SimulationParameters(
        duration = duration,
@@ -218,8 +212,8 @@ def exercise_8g3(timestep, duration=20, seed=0, drive_mlr=4, disruptions = init_
         sim, data = simulation(
             sim_parameters=sim_parameters,  # Simulation parameters, see above
             arena='water',  # Can also be 'ground', give it a try!
-            #fast=True,  # For fast mode (not real-time)
-            #headless=True,  # For headless mode (No GUI, could be faster)
+            fast=True,  # For fast mode (not real-time)
+            headless=True,  # For headless mode (No GUI, could be faster)
             # record=True,  # Record video
         )
         # Log robot data
@@ -228,16 +222,20 @@ def exercise_8g3(timestep, duration=20, seed=0, drive_mlr=4, disruptions = init_
         with open(filename.format(seed,simulation_i, 'pickle'), 'wb') as param_file:
             pickle.dump(sim_parameters, param_file)
     
-    makeplots(plot=True, ex_id='8g3', seed=seed)
+    
 
 
 if __name__ == '__main__':
-    
+    duration = 20
     drive_mlr = 4
-    for seed in range(3):
+    max_seed = 10
+    
+    for seed in range(max_seed+1):
         disruptions = init_disruptions(seed)
         
-        exercise_8g1(timestep=1e-2, drive_mlr = drive_mlr, seed=seed, disruptions=disruptions)
-        exercise_8g2(timestep=1e-2, drive_mlr = drive_mlr, seed=seed,disruptions=disruptions)
-        exercise_8g3(timestep=1e-2, drive_mlr = drive_mlr, seed=seed,disruptions=disruptions)
+        exercise_8g1(timestep=1e-2, duration = duration, drive_mlr = drive_mlr, seed=seed, disruptions=disruptions)
+        exercise_8g2(timestep=1e-2, duration = duration, drive_mlr = drive_mlr, seed=seed, disruptions=disruptions)
+        exercise_8g3(timestep=1e-2, duration = duration, drive_mlr = drive_mlr, seed=seed, disruptions=disruptions)
+        
+    makeplots(plot=True, ex_id='8g', max_seed=max_seed)
 

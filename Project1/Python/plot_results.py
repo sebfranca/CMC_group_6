@@ -114,7 +114,7 @@ def obtain_speed(times, link_data):
     return distance/t
 
 
-def main(plot=True, ex_id = '8b', grid_id = 0):
+def main(plot=True, ex_id = '8b', grid_id = 0,max_seed = 0):
     """Main"""
     if ex_id in ['8b','8c','8f', '9a_grid']:
         exists=True
@@ -423,8 +423,99 @@ def main(plot=True, ex_id = '8b', grid_id = 0):
         axs[1].legend(loc = 'center left')
             
         
-        
+    elif ex_id in ['8g']:
+        for this_ex in ['8g1','8g2','8g3']:
+            speeds = []
+            errbar = []
+            
+            all_sims = [i for i in range(37)]
+            #indices of disruptions
+            dis_c = [0,1,2,3,4,5,6,7,8,9]
+            dis_o = [0,10,11,12,13,14,15,16,17,18]
+            dis_s = [0,19,20,21,22,23,24,25,26,27]
+            dis_mix = [0,28,29,30,31,32,33,34,35,36]
+            
+            for sim_i in all_sims:
+                speed_i = []
+                for seed in range(max_seed+1):
+                    data = SalamandraData.from_file('logs/ex_{}/seed_{}_simulation_{}.{}'.format(this_ex,seed,sim_i,'h5'))
+                    with open('logs/ex_{}/seed_{}_simulation_{}.pickle'.format(this_ex,seed,sim_i),'rb') as param_file:
+                        parameters = pickle.load(param_file)
+                    timestep = data.timestep
+                    n_iterations = np.shape(data.sensors.links.array)[0]
+                    times = np.arange(
+                        start=0,
+                        stop = timestep*n_iterations,
+                        step = timestep,)
+                    timestep = times[1] - times[0]
+                    
+                    osc_phases = data.state.phases()
+                    osc_amplitudes = data.state.amplitudes()
+                    links_positions = data.sensors.links.urdf_positions()
+                    head_positions = links_positions[:, 0, :]
+                    tail_positions = links_positions[:, 8, :]
+                    joints_positions = data.sensors.joints.positions_all()
+                    joints_velocities = data.sensors.joints.velocities_all()
+                    joints_torques = data.sensors.joints.motor_torques_all()
+                    
+                    avg_speed = obtain_speed(times,head_positions)
+                    speed_i.append(avg_speed)
+                
+                speeds.append(np.mean(speed_i))
+                errbar.append(np.std(speed_i))
+            
+            base_speed = speeds[0]
+            speeds = [100*speed/base_speed for speed in speeds]
+            errbar = [100*e/base_speed for e in errbar]
+            
+            speeds_c = [speeds[i]  for i in dis_c]
+            speeds_o = [speeds[i]  for i in dis_o]
+            speeds_s = [speeds[i]  for i in dis_s]
+            speeds_m = [speeds[i]  for i in dis_mix]
+            e_c = [errbar[i] for i in dis_c]
+            e_o = [errbar[i] for i in dis_o]
+            e_s = [errbar[i] for i in dis_s]
+            e_m = [errbar[i] for i in dis_mix]
+            
+            
+            
+            #Only one row: CPG only (8g1), decoupled (8g2), combined (8g3)
+            #Columns: muted couplings, muted oscillators, muted sensors, mixed
+            fig, (axs_c, axs_o, axs_s, axs_m) = plt.subplots(1,4, sharey=True)
+            
+            if this_ex == '8g1': fig.suptitle("CPG only")
+            if this_ex == '8g2': fig.suptitle("Decoupled")
+            if this_ex == '8g3': fig.suptitle("Combined")
+            
+            axs_c.errorbar([i for i in range(10)], speeds_c, yerr=e_c, capsize=3,elinewidth = 0.5)
+            axs_c.set_xticks([0,3,6,9])
+            axs_c.set_xlabel("Nb. disruptions")
+            axs_c.set_ylabel("Speed (% of the baseline)")
+            axs_c.grid(True)
+            axs_c.set_title("Couplings")
+            axs_c.set_ylim([0,110])
+            
+            axs_o.errorbar([i for i in range(10)], speeds_o, yerr=e_o, capsize=3, elinewidth = 0.5)
+            axs_o.set_xticks([0,3,6,9])
+            axs_o.set_xlabel("Nb. disruptions")
+            axs_o.grid(True)
+            axs_o.set_title("Oscillators")
+            axs_o.set_ylim([0,110])
+            
+            axs_s.errorbar([i for i in range(10)], speeds_s, yerr=e_s, capsize=3, elinewidth = 0.5)
+            axs_s.set_xticks([0,3,6,9])
+            axs_s.set_xlabel("Nb. disruptions")
+            axs_s.grid(True)
+            axs_s.set_title("Sensors")
+            axs_s.set_ylim([0,110])
+            
+            axs_m.errorbar([i for i in range(10)], speeds_m, yerr=e_m, capsize=3, elinewidth = 0.5)
+            axs_m.set_xticks([0,3,6,9])
+            axs_m.set_xlabel("Nb. disruptions")
+            axs_m.grid(True)
+            axs_m.set_title("Mixed")
+            axs_m.set_ylim([0,110])
 
 if __name__ == '__main__':
-    main(plot=not save_plots(), ex_id = '9a_grid', grid_id='amplitude')
+    main(plot=not save_plots(), ex_id = '8g', max_seed=10)
 

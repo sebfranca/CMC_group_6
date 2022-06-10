@@ -77,15 +77,9 @@ def network_ode(_time, state, robot_parameters, loads):
             if i in robot_parameters.disrupted_sensors:
                 loads[i] = 0
         
-        
         thetadot += np.multiply(np.multiply(robot_parameters.feedback_gains, loads), np.cos(phases))
     
     rdot = a * (R-amplitudes)  
-
-    
-    for osc in range(16):
-        if osc in robot_parameters.disrupted_oscillators:
-            rdot[osc] = 0
     
     
     return np.concatenate([thetadot, rdot])
@@ -117,7 +111,6 @@ def motor_output(phases, amplitudes, iteration):
             #/!\ 20 phases but only 12 bodies --> i+8
             q[i] = 1*phases[i+8] - np.pi/2
     return q
-
 
 
 class SalamandraNetwork:

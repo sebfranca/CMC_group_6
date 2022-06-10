@@ -150,6 +150,7 @@ class RobotParameters(dict):
         target = np.random.choice(self.oscillators_remaining)
         self.oscillators_remaining = [o for o in self.oscillators_remaining if o!=target]
         self.disrupted_oscillators.append(target)
+        self.freqs[target] = 0
 
     def disrupt_sensors(self):
         target = np.random.choice(self.sensors_remaining)
